@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-8">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 pb-6 border-b border-gray-100">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="w-24 h-24 rounded-full object-cover border-4 border-brand-50 shadow-sm">
+            {% else %}
+                <div class="w-24 h-24 rounded-full bg-brand-primary text-white flex items-center justify-center text-3xl font-black shadow-sm">
+                    {{ user.first_name|default:user.username|slice:":1"|upper }}
+                </div>
+            {% endif %}
+
+            <div class="space-y-1 text-center sm:text-left flex-1">
+                <div class="flex items-center justify-center sm:justify-start space-x-2">
+                    <h1 class="text-2xl font-black text-gray-900">{{ user.get_full_name|default:user.username }}</h1>
+                    <span class="bg-brand-50 border border-brand-100 text-brand-primary text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
+                        {{ user.get_role_display }}
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 font-medium">Member since {{ user.date_joined|date:"F Y" }}</p>
+                {% if user.agency_name %}
+                    <p class="text-xs font-bold text-gray-700">🏢 Agency: {{ user.agency_name }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <a href="{% url 'accounts:edit_profile' %}" class="bg-brand-primary hover:bg-brand-hover text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm inline-block">
+                    Edit Profile
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-50 border border-gray-100 p-5 rounded-2xl space-y-2">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Email Address</span>
+                <p class="text-sm font-bold text-gray-800">{{ user.email }}</p>
+                {% if user.email_verified %}
+                    <span class="inline-block text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-bold">Verified</span>
+                {% endif %}
+            </div>
+
+            <div class="bg-gray-50 border border-gray-100 p-5 rounded-2xl space-y-2">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Phone Number</span>
+                <p class="text-sm font-bold text-gray-800">{{ user.phone|default:"Not provided" }}</p>
+                {% if user.phone_verified %}
+                    <span class="inline-block text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-bold">Verified</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user.bio %}
+            <div class="bg-gray-50 border border-gray-100 p-5 rounded-2xl space-y-1">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Bio / Overview</span>
+                <p class="text-xs text-gray-700 leading-relaxed font-medium">{{ user.bio }}</p>
+            </div>
+        {% endif %}
+
+        <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
+            <a href="{% url 'accounts:dashboard' %}" class="text-xs font-bold text-gray-600 hover:text-brand-primary">
+                ← Back to Dashboard
+            </a>
+            <a href="{% url 'accounts:password_reset' %}" class="text-xs font-bold text-brand-primary hover:underline">
+                Reset Password
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

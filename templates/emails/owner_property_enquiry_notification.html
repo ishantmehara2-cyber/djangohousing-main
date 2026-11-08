@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New property enquiry received | Housing</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+    <table role="presentation" style="width: 100%; background-color: #f8fafc; padding: 40px 16px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" style="width: 100%; max-width: 540px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 36px 32px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    <tr>
+                        <td align="left" style="padding-bottom: 24px; border-bottom: 1px solid #f1f5f9;">
+                            <span style="font-size: 22px; font-weight: 900; color: #0f172a; letter-spacing: -0.03em;">
+                                HOUSING<span style="color: #e02424;">.</span>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="left" style="padding-top: 24px;">
+                            <p style="font-size: 15px; font-weight: 600; color: #0f172a; margin: 0 0 12px 0;">Hello {{ owner_name|default:"Property Owner" }},</p>
+                            <p style="font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 20px 0;">
+                                Great news! You have received a new verified enquiry for your property listed on Housing.
+                            </p>
+
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+                                <p style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0;">Property: {{ property_title }}</p>
+                                <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Ref ID: #{{ property_id }} | Location: {{ property_location }}</p>
+
+                                <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 12px 0;">
+
+                                <p style="font-size: 12px; font-weight: 700; color: #0f172a; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em;">Interested User Details:</p>
+                                <table role="presentation" style="width: 100%; font-size: 13px; color: #334155;">
+                                    <tr>
+                                        <td style="padding: 4px 0; font-weight: 600; width: 120px;">Name:</td>
+                                        <td style="padding: 4px 0;">{{ buyer_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 4px 0; font-weight: 600;">Verified Email:</td>
+                                        <td style="padding: 4px 0;"><a href="mailto:{{ buyer_email }}" style="color: #e02424; text-decoration: none;">{{ buyer_email }}</a></td>
+                                    </tr>
+                                    {% if buyer_phone %}
+                                    <tr>
+                                        <td style="padding: 4px 0; font-weight: 600;">Phone Number:</td>
+                                        <td style="padding: 4px 0;">{{ buyer_phone }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <td style="padding: 4px 0; font-weight: 600;">Enquiry Date:</td>
+                                        <td style="padding: 4px 0;">{{ enquiry_date }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            {% if enquiry_message %}
+                            <div style="background-color: #fef2f2; border-left: 4px solid #e02424; padding: 12px 16px; margin-bottom: 24px;">
+                                <p style="font-size: 12px; font-weight: 700; color: #991b1b; margin: 0 0 4px 0;">Enquiry Message:</p>
+                                <p style="font-size: 13px; color: #334155; margin: 0; font-style: italic;">"{{ enquiry_message }}"</p>
+                            </div>
+                            {% endif %}
+
+                            <p style="font-size: 14px; color: #334155; margin: 0;">
+                                Regards,<br>
+                                <strong>Team Housing</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding-top: 32px; margin-top: 32px; border-top: 1px solid #f1f5f9;">
+                            <p style="font-size: 11px; color: #94a3b8; margin: 0;">
+                                &copy; 2026 Housing. All rights reserved.<br>
+                                India's Modern Real Estate Marketplace.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

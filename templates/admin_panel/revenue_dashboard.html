@@ -1,0 +1,74 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Revenue & Monetization Dashboard | Admin Panel{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-8">
+    <div>
+        <h1 class="text-2xl font-black text-gray-900">Platform Revenue & Subscription Monetization</h1>
+        <p class="text-xs text-gray-500 font-medium mt-1">Verified financial transactions, active subscription plans, and platform revenue metrics.</p>
+    </div>
+
+    <!-- Revenue Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Total Verified Revenue</span>
+            <p class="text-3xl font-black text-emerald-600">₹ {{ total_revenue|floatformat:0 }}</p>
+            <p class="text-[11px] text-gray-500 font-medium pt-1">Verified payment receipts</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Active Subscriptions</span>
+            <p class="text-3xl font-black text-gray-900">{{ active_subscriptions }}</p>
+            <p class="text-[11px] text-gray-500 font-medium pt-1">Paid active owner plans</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Total Transactions</span>
+            <p class="text-3xl font-black text-gray-900">{{ total_transactions }}</p>
+            <p class="text-[11px] text-emerald-600 font-bold pt-1">{{ successful_txns }} Successful</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Active Promotions</span>
+            <p class="text-3xl font-black text-gray-900">{{ active_promotions }}</p>
+            <p class="text-[11px] text-gray-500 font-medium pt-1">Featured property promotions</p>
+        </div>
+    </div>
+
+    <!-- Payment Transactions Table -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-black text-gray-900">Recent Payment Transactions</h2>
+        <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase">
+                        <th class="p-4">Transaction ID</th>
+                        <th class="p-4">Customer</th>
+                        <th class="p-4">Plan / Item</th>
+                        <th class="p-4">Amount</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-xs font-semibold text-gray-800">
+                    {% for txn in transactions %}
+                        <tr>
+                            <td class="p-4 font-mono font-bold text-brand-primary">TXN-{{ txn.id }}</td>
+                            <td class="p-4">{{ txn.user.username }} ({{ txn.user.email }})</td>
+                            <td class="p-4">{% if txn.package %}{{ txn.package.name }}{% else %}Promotion{% endif %}</td>
+                            <td class="p-4 font-black">₹ {{ txn.amount|floatformat:0 }}</td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded text-[10px] font-bold uppercase
+                                    {% if txn.status == 'SUCCESS' %} bg-emerald-100 text-emerald-800
+                                    {% elif txn.status == 'PENDING' %} bg-amber-100 text-amber-800
+                                    {% else %} bg-red-100 text-red-800 {% endif %}">
+                                    {{ txn.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="p-4 text-gray-400">{{ txn.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

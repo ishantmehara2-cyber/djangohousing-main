@@ -1,0 +1,15 @@
+[Unit]
+Description=Gunicorn daemon for Housing.clone Django Marketplace
+After=network.target mysql.service redis-server.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/housing-clone-django
+ExecStart=/var/www/housing-clone-django/.venv/bin/gunicorn --config gunicorn.conf.py housing_config.wsgi:application
+Restart=always
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

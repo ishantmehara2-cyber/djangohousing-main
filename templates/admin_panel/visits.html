@@ -1,0 +1,43 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Property Visits | Admin Panel{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div>
+        <h1 class="text-2xl font-black text-gray-900">Scheduled Property Visits</h1>
+        <p class="text-xs text-gray-500 font-medium mt-1">Monitor site inspections and visit appointments scheduled by clients.</p>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase">
+                    <th class="p-4">Property</th>
+                    <th class="p-4">Visitor</th>
+                    <th class="p-4">Visit Date & Time</th>
+                    <th class="p-4">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-xs font-semibold text-gray-800">
+                {% for v in visits %}
+                    <tr>
+                        <td class="p-4 font-black text-gray-900">{{ v.property.title }}</td>
+                        <td class="p-4">{{ v.visitor_user.username }} ({{ v.visitor_user.email }})</td>
+                        <td class="p-4 text-gray-600">{{ v.visit_date|date:"M d, Y H:i" }}</td>
+                        <td class="p-4">
+                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                                {{ v.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-8 text-center text-gray-400 font-bold">No property visits scheduled.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

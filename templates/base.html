@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Housing.. - India's Modern Real Estate Marketplace{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#e02424',
+                            hover: '#c81e1e',
+                            dark: '#991b1b',
+                            light: '#fef2f2',
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Project Stylesheets -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/homepage.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+
+    <!-- Third-Party Libraries -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Global Navigation Header -->
+    {% include 'includes/header.html' %}
+
+    <!-- Global Messages / Toasts -->
+    {% include 'includes/messages.html' %}
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    {% include 'includes/footer.html' %}
+
+    <!-- Global Navigation & UI JavaScript -->
+    <script src="{% static 'js/navigation.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

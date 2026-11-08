@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Access Forbidden | Housing..{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-24 text-center space-y-6">
+    <div class="w-20 h-20 bg-red-100 text-brand-primary rounded-3xl flex items-center justify-center mx-auto text-3xl font-black">403</div>
+    <h1 class="text-3xl font-black text-gray-900">Access Forbidden</h1>
+    <p class="text-sm text-gray-500">You do not have the required permissions to access this page or resource.</p>
+    <a href="{% url 'home' %}" class="inline-block bg-brand-primary text-white text-xs font-bold px-8 py-3.5 rounded-xl">Go Home</a>
+</div>
+{% endblock %}

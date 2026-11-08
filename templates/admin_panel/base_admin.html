@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Control Panel | Housing...{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans antialiased min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-900 text-gray-300 flex flex-col justify-between hidden md:flex border-r border-gray-800">
+        <div class="p-6 space-y-6">
+            <a href="{% url 'moderation:dashboard' %}" class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-brand-primary bg-red-600 rounded-xl flex items-center justify-center text-white font-black">
+                    A
+                </div>
+                <span class="text-base font-black text-white tracking-wider">ADMIN PANEL</span>
+            </a>
+            <nav class="space-y-1 text-xs font-bold">
+                <a href="{% url 'moderation:dashboard' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">📊 Overview</a>
+                <a href="{% url 'moderation:pending-properties' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">⏳ Pending Approvals</a>
+                <a href="{% url 'moderation:all-properties' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">🏠 All Properties</a>
+                <a href="{% url 'moderation:users' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">👥 User Management</a>
+                <a href="{% url 'moderation:enquiries' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">📩 Enquiries</a>
+                <a href="{% url 'moderation:visits' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">📅 Property Visits</a>
+                <a href="{% url 'moderation:reports' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">🚩 Flagged Reports</a>
+                <a href="{% url 'moderation:audit-logs' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">🛡️ Audit Logs</a>
+                <a href="{% url 'moderation:property-fields' %}" class="block px-4 py-2.5 rounded-xl hover:bg-gray-800 transition text-white">⚙️ Form Field Management</a>
+            </nav>
+        </div>
+        <div class="p-6 border-t border-gray-800">
+            <a href="{% url 'home' %}" class="block text-center bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-xl text-xs font-bold transition">
+                Return to Public Site
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-grow flex flex-col min-h-screen">
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shadow-sm">
+            <span class="text-sm font-black text-gray-800 uppercase tracking-wide">Housing... Administration Suite</span>
+            <div class="flex items-center space-x-4 text-xs font-bold">
+                <span class="text-gray-600">Admin: {{ user.username }}</span>
+                <form method="POST" action="{% url 'accounts:logout' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-600 hover:underline">Logout</button>
+                </form>
+            </div>
+        </header>
+
+        {% if messages %}
+            <div class="max-w-7xl mx-auto px-8 mt-4 w-full">
+                {% for message in messages %}
+                    <div class="p-3 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <main class="flex-grow p-8">
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

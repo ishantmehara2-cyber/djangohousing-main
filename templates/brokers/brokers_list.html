@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Verified Real Estate Brokers & Agents | Housing..{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+    <div class="border-b border-gray-200 pb-6">
+        <h1 class="text-3xl font-black text-gray-900">Verified Real Estate Brokers & Agents</h1>
+        <p class="text-sm text-gray-500 mt-2">Connect with certified property experts and agency professionals across India.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for agent in agents %}
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+            <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-brand-primary/10 text-brand-primary rounded-2xl flex items-center justify-center font-black text-xl">
+                    {{ agent.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-gray-900">{{ agent.get_full_name|default:agent.username }}</h3>
+                    <p class="text-xs text-brand-primary font-bold">{{ agent.agency_name|default:"Independent Real Estate Expert" }}</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-600 line-clamp-2">{{ agent.bio|default:"Experienced real estate professional specializing in residential and commercial properties." }}</p>
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-between text-xs">
+                {% if user.is_authenticated and user.is_admin_role %}
+                    <span class="font-bold text-gray-700">📞 {{ agent.phone|default:"N/A" }}</span>
+                    <span class="text-gray-500 text-[11px]">{{ agent.email }}</span>
+                {% else %}
+                    <span class="font-bold text-gray-400">🔒 Contact Privacy Protected</span>
+                    <a href="{% url 'properties:search' %}?keyword={{ agent.username }}" class="bg-gray-900 hover:bg-black text-white font-bold px-4 py-2 rounded-xl transition">View Listings</a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-16 text-center text-gray-400 font-bold">
+            No brokers or agents currently registered.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+            <div class="alert-banner {% if message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                <span>{{ message }}</span>
+                <button type="button" onclick="this.parentElement.style.display='none';" class="text-lg font-bold ml-4 focus:outline-none cursor-pointer">&times;</button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

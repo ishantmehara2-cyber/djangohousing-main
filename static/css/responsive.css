@@ -1,0 +1,43 @@
+/* Mobile & Tablet Responsive Media Queries */
+
+@media (max-width: 1023px) {
+    .nav-menu-desktop {
+        display: none !important;
+    }
+    .mobile-hamburger-btn {
+        display: block !important;
+    }
+    .search-form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .btn-hero-search {
+        grid-column: span 2;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 767px) {
+    .hero-banner {
+        padding: 32px 12px 60px 12px;
+    }
+    .hero-title {
+        font-size: 28px;
+    }
+    .hero-subtitle {
+        font-size: 13px;
+        margin-bottom: 24px;
+    }
+    .search-card-container {
+        padding: 16px;
+    }
+    .search-form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .btn-hero-search {
+        grid-column: span 1;
+    }
+    .section-title {
+        font-size: 20px;
+    }
+}

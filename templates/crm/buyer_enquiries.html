@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}My Enquiries & Visits | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-gray-900">My Enquiries & Property Visits</h1>
+            <p class="text-xs text-gray-500 font-medium mt-1">Track your sent property inquiries and scheduled site visits.</p>
+        </div>
+        <a href="{% url 'properties:search' %}" class="bg-brand-primary hover:bg-brand-hover text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+            Explore More Properties
+        </a>
+    </div>
+
+    <!-- Enquiries Section -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-black text-gray-900">Submitted Property Enquiries</h2>
+        {% if enquiries %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for enq in enquiries %}
+                    <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-brand-50 text-brand-primary">
+                                Enquiry Sent
+                            </span>
+                            <span class="text-xs text-gray-400">{{ enq.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <h3 class="font-black text-sm text-gray-900">{{ enq.property.title }}</h3>
+                        <p class="text-xs text-gray-500">📍 {{ enq.property.locality.name }}, {{ enq.property.city.name }}</p>
+                        <p class="text-xs text-gray-700 bg-gray-50 p-3 rounded-xl italic">"{{ enq.message }}"</p>
+                        <div class="pt-2">
+                            <a href="{% url 'properties:detail' enq.property.slug %}" class="inline-block bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition">
+                                View Property Details
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-12 text-center text-xs font-bold text-gray-400">
+                You haven't submitted any property enquiries yet.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Scheduled Visits Section -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-black text-gray-900">Scheduled Property Visits</h2>
+        {% if visits %}
+            <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+                <div class="divide-y divide-gray-100">
+                    {% for v in visits %}
+                        <div class="p-5 flex items-center justify-between">
+                            <div>
+                                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase px-2 py-0.5 rounded">
+                                    {{ v.get_status_display }}
+                                </span>
+                                <h4 class="font-bold text-sm text-gray-900 mt-1">{{ v.property.title }}</h4>
+                                <p class="text-xs text-gray-500">📅 Scheduled for: {{ v.visit_date|date:"F d, Y at H:i" }}</p>
+                            </div>
+                            <a href="{% url 'properties:detail' v.property.slug %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+                                View Property
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-8 text-center text-xs font-bold text-gray-400">
+                No property visits scheduled yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

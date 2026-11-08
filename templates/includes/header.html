@@ -1,0 +1,126 @@
+{% load static %}
+<header class="site-header">
+    <div class="header-container">
+        <!-- Logo and Brand -->
+        <div class="flex items-center space-x-6">
+            <a href="{% url 'home' %}" class="brand-logo">
+                <div class="brand-icon">H</div>
+                <div class="flex flex-col">
+                    <span class="brand-text-main">
+                        HOUSING<span class="brand-text-highlight">...</span>
+                    </span>
+                    <span class="brand-subtitle">
+                        
+                    </span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="nav-menu-desktop">
+            <a href="{% url 'properties:search' %}?listing_purpose=BUY" class="nav-link {% if request.GET.listing_purpose == 'BUY' %}nav-link-active{% endif %}">Buy</a>
+            <a href="{% url 'properties:search' %}?listing_purpose=RENT" class="nav-link {% if request.GET.listing_purpose == 'RENT' %}nav-link-active{% endif %}">Rent</a>
+            <a href="{% url 'properties:search' %}?listing_purpose=COMMERCIAL" class="nav-link {% if request.GET.listing_purpose == 'COMMERCIAL' %}nav-link-active{% endif %}">Commercial</a>
+            <a href="{% url 'services:bank-loans' %}" class="nav-link {% if request.resolver_match.url_name == 'bank-loans' %}nav-link-active{% endif %}">Bank Loans</a>
+            <a href="{% url 'services:rental-agreement' %}" class="nav-link {% if request.resolver_match.url_name == 'rental-agreement' %}nav-link-active{% endif %}">Rental Agreement</a>
+            <a href="{% url 'engagements:smart-discover' %}" class="nav-link {% if request.resolver_match.url_name == 'smart-discover' %}nav-link-active{% endif %}">Smart Discover</a>
+            <a href="/brokers/" class="nav-link {% if '/brokers/' in request.path %}nav-link-active{% endif %}">Brokers</a>
+        </nav>
+
+        <!-- Right Side Actions & User Profile -->
+        <div class="header-actions">
+            <a href="{% url 'properties:post-property' %}" class="btn-post-property">
+                <span>+ Post Property</span>
+                <span class="bg-white/20 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">FREE</span>
+            </a>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'engagements:notifications' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center" title="Notification Centre">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </a>
+
+                <div class="user-menu-wrapper">
+                    <button id="user-menu-btn" class="user-menu-btn" aria-expanded="false" aria-haspopup="true">
+                        <div class="user-avatar-circle">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                        <span class="max-w-[100px] truncate">{{ user.first_name|default:user.username }}</span>
+                        <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <div id="user-dropdown-panel" class="user-dropdown-panel">
+                        <div class="user-dropdown-header">
+                            <p class="user-dropdown-name">{{ user.get_full_name|default:user.username }}</p>
+                            <p class="user-dropdown-role">{{ user.get_role_display }}</p>
+                        </div>
+                        <a href="{% url 'engagements:smart-discover' %}" class="user-dropdown-item">Smart Discover Hub</a>
+                        <a href="{% url 'engagements:preferences' %}" class="user-dropdown-item">Property Preferences</a>
+                        <a href="{% url 'engagements:recently-viewed' %}" class="user-dropdown-item">Recently Viewed</a>
+                        <a href="{% url 'engagements:saved-searches' %}" class="user-dropdown-item">Saved Searches</a>
+                        <a href="{% url 'engagements:buyer-enquiries' %}" class="user-dropdown-item">My Enquiries & Visits</a>
+                        <a href="{% url 'properties:my-properties' %}" class="user-dropdown-item">My Properties Catalog</a>
+                        <a href="{% url 'engagements:owner-enquiries' %}" class="user-dropdown-item">Owner CRM Leads</a>
+                        <a href="{% url 'billing:billing-dashboard' %}" class="user-dropdown-item">Billing & Subscriptions</a>
+                        <hr class="border-gray-100 my-1">
+                        <form method="POST" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="logout-btn-submit">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'accounts:login' %}" class="text-xs font-bold text-gray-700 hover:text-brand-primary px-3 py-2 transition">
+                        Login
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="bg-gray-900 hover:bg-black text-white text-xs font-bold px-3.5 py-2 rounded-xl transition">
+                        Register
+                    </a>
+                </div>
+            {% endif %}
+
+            <button id="mobile-menu-btn" class="mobile-hamburger-btn" aria-label="Open Navigation Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div id="mobile-menu-backdrop" class="mobile-menu-backdrop"></div>
+<div id="mobile-menu-drawer" class="mobile-menu-drawer">
+    <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+        <span class="font-black text-base">HOUSING<span class="text-brand-primary">..</span></span>
+        <button id="mobile-menu-close" class="p-2 text-gray-500 hover:text-gray-900 font-bold">&times;</button>
+    </div>
+    <div class="p-4 space-y-4 overflow-y-auto flex-grow">
+        <div class="space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Explore Properties</p>
+            <a href="{% url 'properties:search' %}?listing_purpose=BUY" class="block py-2 text-sm font-semibold text-gray-800 hover:text-brand-primary">For Buyers</a>
+            <a href="{% url 'properties:search' %}?listing_purpose=RENT" class="block py-2 text-sm font-semibold text-gray-800 hover:text-brand-primary">For Tenants</a>
+            <a href="{% url 'properties:search' %}?listing_purpose=COMMERCIAL" class="block py-2 text-sm font-semibold text-gray-800 hover:text-brand-primary">Commercial Properties</a>
+            <a href="{% url 'properties:search' %}?listing_purpose=PLOT" class="block py-2 text-sm font-semibold text-gray-800 hover:text-brand-primary">Plots & Land</a>
+            <a href="{% url 'engagements:smart-discover' %}" class="block py-2 text-sm font-semibold text-brand-primary">Smart Discover Hub</a>
+        </div>
+        <hr class="border-gray-200">
+        <div class="space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Services & Tools</p>
+            <a href="{% url 'services:bank-loans' %}" class="block py-2 text-sm font-semibold text-gray-800 hover:text-brand-primary">Bank Loans</a>
+            <a href="{% url 'services:rental-agreement' %}" class="block py-2 text-sm font-semibold text-gray-800 hover:text-brand-primary">Rental Agreement</a>
+            <a href="{% url 'properties:post-property' %}" class="block py-2 text-sm font-bold text-brand-primary">+ Post Property (Free)</a>
+            <a href="/brokers/" class="block py-2 text-sm font-semibold text-gray-800 hover:text-brand-primary">Top Brokers & Agents</a>
+        </div>
+        {% if not user.is_authenticated %}
+        <hr class="border-gray-200">
+        <div class="space-y-2 pt-2">
+            <a href="{% url 'accounts:login' %}" class="block text-center bg-gray-100 text-gray-900 py-2.5 rounded-xl text-xs font-bold">Login</a>
+            <a href="{% url 'accounts:register' %}" class="block text-center bg-brand-primary text-white py-2.5 rounded-xl text-xs font-bold">Register Account</a>
+        </div>
+        {% endif %}
+    </div>
+</div>

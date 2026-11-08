@@ -1,0 +1,290 @@
+/* Homepage Hero Banner & Content Styling */
+
+/* Hero Section */
+.hero-banner {
+    background: linear-gradient(135deg, #e02424 0%, #991b1b 60%, #450a0a 100%);
+    color: #ffffff;
+    padding: 48px 16px 80px 16px;
+    position: relative;
+    overflow: hidden;
+}
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+.hero-trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+.hero-title {
+    font-size: 42px;
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+}
+.hero-subtitle {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 32px;
+}
+
+/* Multi-tab Hero Search Card */
+.search-card-container {
+    background: #ffffff;
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    color: var(--text-heading);
+    max-width: 860px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+/* Purpose Tabs */
+.search-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+.search-tab-btn {
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+.search-tab-btn:hover {
+    color: var(--brand-primary);
+    background: var(--brand-light);
+}
+.search-tab-btn.active {
+    background: var(--brand-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(224, 36, 36, 0.25);
+}
+
+/* Search Form Grid */
+.search-form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) 140px;
+    gap: 12px;
+    align-items: end;
+}
+.search-field-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+}
+.search-field-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+.search-field-input,
+.search-field-select {
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-heading);
+    outline: none;
+    width: 100%;
+}
+.btn-hero-search {
+    background: var(--brand-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 100%;
+}
+.btn-hero-search:hover {
+    background: var(--brand-hover);
+}
+
+/* Section Headings */
+.section-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+.section-tagline {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--brand-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+.section-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--text-heading);
+    margin-top: 4px;
+}
+
+/* Property Card Component Styling */
+.property-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.property-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--brand-primary);
+}
+.property-card-media {
+    position: relative;
+    height: 200px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+.property-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+.property-card:hover .property-card-img {
+    transform: scale(1.05);
+}
+.property-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.property-card-price {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--text-heading);
+}
+.property-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-heading);
+    text-decoration: none;
+}
+.property-card-title:hover {
+    color: var(--brand-primary);
+}
+.property-card-location {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+.property-card-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+}
+.property-card-footer {
+    padding: 16px;
+    padding-top: 0;
+}
+.btn-card-detail {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+.btn-card-detail:hover {
+    background: var(--brand-primary);
+}
+
+/* Popular Cities Grid */
+.city-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: block;
+}
+.city-card:hover {
+    border-color: var(--brand-primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+.city-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-heading);
+}
+.city-card:hover .city-name {
+    color: var(--brand-primary);
+}
+
+/* Empty States */
+.empty-state-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    padding: 48px 24px;
+    text-align: center;
+}
+.empty-state-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-heading);
+    margin-bottom: 8px;
+}
+.empty-state-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}

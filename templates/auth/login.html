@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Login | Housing...{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-16">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+        <div class="text-center space-y-1">
+            <h1 class="text-2xl font-black text-gray-900">Welcome Back</h1>
+            <p class="text-xs text-gray-400 font-medium">Login to access your dashboard & saved properties.</p>
+        </div>
+
+        <form method="POST" action="{% url 'accounts:login' %}" class="space-y-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-bold space-y-1">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email or Username</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase">Password</label>
+                    <a href="{% url 'accounts:password_reset' %}" class="text-[10px] font-bold text-brand-primary hover:underline">Forgot password?</a>
+                </div>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.password.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center space-x-2 pt-1">
+                {{ form.remember_me }}
+                <label class="text-xs font-medium text-gray-600 cursor-pointer">
+                    Remember me on this browser
+                </label>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-primary hover:bg-brand-hover text-white py-3 rounded-xl font-bold text-xs transition shadow-sm">
+                Login to Account
+            </button>
+        </form>
+
+        <p class="text-center text-xs text-gray-500 font-medium">
+            Don't have an account? <a href="{% url 'accounts:register' %}" class="text-brand-primary font-bold hover:underline">Register here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Ticket #{{ ticket.ticket_id }} | Housing...{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12 space-y-8">
+    <div class="flex items-center justify-between border-b border-gray-200 pb-6">
+        <div>
+            <div class="flex items-center space-x-3">
+                <h1 class="text-2xl font-black text-gray-900">Support Ticket #{{ ticket.ticket_id }}</h1>
+                <span class="px-3 py-1 rounded-full text-xs font-bold
+                    {% if ticket.status == 'OPEN' %}bg-blue-100 text-blue-800
+                    {% elif ticket.status == 'IN_PROGRESS' %}bg-amber-100 text-amber-800
+                    {% elif ticket.status == 'RESOLVED' %}bg-emerald-100 text-emerald-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ ticket.get_status_display }}
+                </span>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">{{ ticket.subject }} • Category: {{ ticket.get_category_display }}</p>
+        </div>
+        <a href="{% url 'support:support-list' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold px-4 py-2.5 rounded-xl transition">← Back to Tickets</a>
+    </div>
+
+    <!-- Messages / Conversation History -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+        <h3 class="text-sm font-black text-gray-900">Conversation History</h3>
+        <div class="space-y-4">
+            {% for msg in messages_list %}
+            <div class="p-4 rounded-xl {% if msg.sender.is_admin_role %}bg-red-50 border border-red-200{% else %}bg-gray-50 border border-gray-200{% endif %} space-y-1">
+                <div class="flex items-center justify-between text-xs font-bold text-gray-700">
+                    <span>{{ msg.sender.get_full_name|default:msg.sender.username }} {% if msg.sender.is_admin_role %}<span class="text-brand-primary">(Support Staff)</span>{% endif %}</span>
+                    <span class="text-gray-400 font-normal">{{ msg.created_at|date:"M d, Y, H:i" }}</span>
+                </div>
+                <p class="text-xs text-gray-800 mt-2 leading-relaxed whitespace-pre-line">{{ msg.message }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Reply Form -->
+        <form method="POST" class="pt-6 border-t border-gray-200 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Add Reply</label>
+                <textarea name="message" rows="4" required placeholder="Type your message or response here..." class="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm focus:ring-2 focus:ring-brand-primary"></textarea>
+            </div>
+            <button type="submit" class="bg-brand-primary hover:bg-brand-hover text-white text-xs font-bold px-6 py-3 rounded-xl transition">Send Reply</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

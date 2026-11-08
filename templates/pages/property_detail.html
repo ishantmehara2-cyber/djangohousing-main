@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}{{ property.title }} | Housing..{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="{{ property.description|truncatechars:160 }}">
+<meta property="og:title" content="{{ property.title }}">
+<meta property="og:description" content="{{ property.description|truncatechars:160 }}">
+{% if media_items.first %}<meta property="og:image" content="{{ media_items.first.file.url }}">{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Preview Banner if Unpublished -->
+    {% if is_preview %}
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-2xl flex items-center justify-between text-xs font-bold">
+            <span>⚠️ Preview Mode: This property is currently unpublished ({{ property.get_listing_state_display }}) and only visible to authorized owners/agents/admins.</span>
+            <span class="bg-amber-200 text-amber-900 px-2.5 py-1 rounded-lg">Draft / Pending Review</span>
+        </div>
+    {% endif %}
+
+    <!-- Breadcrumb & Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="space-y-2">
+            <div class="flex items-center space-x-2 text-xs font-bold text-gray-400">
+                <a href="{% url 'home' %}" class="hover:text-brand-primary">Home</a>
+                <span>/</span>
+                <a href="{% url 'properties:search' %}?city={{ property.city.slug }}" class="hover:text-brand-primary">{{ property.city.name }}</a>
+                <span>/</span>
+                <span class="text-gray-800">{{ property.locality.name }}</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <h1 class="text-2xl sm:text-3xl font-black text-gray-900">{{ property.title }}</h1>
+                {% if property.verification_state == 'VERIFIED' %}
+                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
+                        ✔ 100% Platform Verified
+                    </span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-gray-500 font-medium">📍 {{ property.address }}, {{ property.locality.name }}, {{ property.city.name }} — ID: #PROP-{{ property.id }}</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'engagements:toggle-favorite' property.slug %}" class="border border-gray-300 hover:bg-gray-50 text-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-2 shadow-sm">
+                <span>{% if is_favorited %}❤️ Saved{% else %}🤍 Save Property{% endif %}</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Image Gallery (Professional Grid & Thumbnails) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% with first_media=media_items.first media_count=media_items.count %}
+            {% if first_media %}
+                <div class="md:col-span-2 h-[420px] bg-gray-100 rounded-3xl overflow-hidden shadow-sm relative group">
+                    <img src="{{ first_media.file.url }}" alt="{{ property.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-black/70 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider">
+                        {{ property.get_listing_purpose_display }}
+                    </span>
+                </div>
+            {% else %}
+                <div class="md:col-span-2 h-[420px] bg-gray-100 rounded-3xl flex flex-col items-center justify-center text-gray-400 space-y-2">
+                    <span class="text-4xl">🏠</span>
+                    <span class="text-xs font-bold">No Photos Uploaded Yet</span>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid grid-cols-2 gap-4 h-[420px]">
+            {% for media in media_items|slice:"1:5" %}
+                <div class="bg-gray-100 rounded-2xl overflow-hidden h-[200px] shadow-sm relative group">
+                    <img src="{{ media.file.url }}" alt="Property Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                </div>
+            {% empty %}
+                <div class="col-span-2 bg-white border border-gray-200 rounded-2xl p-6 flex items-center justify-center text-gray-400 text-xs font-bold">
+                    Gallery Preview
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Content & Contact Sidebar -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Details Column -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Key Financials & Highlights Card -->
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">
+                        {% if property.listing_purpose == 'RENT' %}Monthly Rent{% else %}Sale Price{% endif %}
+                    </span>
+                    <p class="text-lg font-black text-gray-900">
+                        {% if property.listing_purpose == 'RENT' %}
+                            {{ property.rent|indian_rent }}
+                        {% else %}
+                            {{ property.price|indian_currency }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Configuration</span>
+                    <p class="text-lg font-black text-gray-900">{% if property.bhk %}{{ property.bhk }} BHK{% else %}Land / Plot{% endif %}</p>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Carpet Area</span>
+                    <p class="text-lg font-black text-gray-900">{{ property.carpet_area|floatformat:0 }} {{ property.get_area_unit_display }}</p>
+                </div>
+                <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Furnishing</span>
+                    <p class="text-lg font-black text-gray-900">{{ property.get_furnishing_display }}</p>
+                </div>
+            </div>
+
+            <!-- Additional Financial Details (Security Deposit / Maintenance) -->
+            {% if property.security_deposit or property.maintenance_fee %}
+                <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm flex items-center justify-around text-center">
+                    {% if property.security_deposit %}
+                        <div>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">Security Deposit</span>
+                            <p class="text-sm font-black text-gray-900">{{ property.security_deposit|indian_currency }}</p>
+                        </div>
+                    {% endif %}
+                    {% if property.maintenance_fee %}
+                        <div>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">Maintenance Fee</span>
+                            <p class="text-sm font-black text-gray-900">₹ {{ property.maintenance_fee|floatformat:0 }} / mo</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <!-- Property Specifications Grid -->
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h2 class="text-lg font-black text-gray-900">Property Specifications</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                        <span class="text-gray-400 block font-bold text-[10px] uppercase">Property Type</span>
+                        <span class="font-black text-gray-800">{{ property.property_type.name }}</span>
+                    </div>
+                    {% if property.bathrooms %}
+                        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                            <span class="text-gray-400 block font-bold text-[10px] uppercase">Bathrooms</span>
+                            <span class="font-black text-gray-800">{{ property.bathrooms }}</span>
+                        </div>
+                    {% endif %}
+                    {% if property.balconies %}
+                        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                            <span class="text-gray-400 block font-bold text-[10px] uppercase">Balconies</span>
+                            <span class="font-black text-gray-800">{{ property.balconies }}</span>
+                        </div>
+                    {% endif %}
+                    {% if property.floor_number is not None %}
+                        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                            <span class="text-gray-400 block font-bold text-[10px] uppercase">Floor Number</span>
+                            <span class="font-black text-gray-800">{{ property.floor_number }} of {{ property.total_floors|default:"--" }}</span>
+                        </div>
+                    {% endif %}
+                    {% if property.facing %}
+                        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                            <span class="text-gray-400 block font-bold text-[10px] uppercase">Facing</span>
+                            <span class="font-black text-gray-800">{{ property.get_facing_display }}</span>
+                        </div>
+                    {% endif %}
+                    {% if property.property_age %}
+                        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                            <span class="text-gray-400 block font-bold text-[10px] uppercase">Property Age</span>
+                            <span class="font-black text-gray-800">{{ property.get_property_age_display }}</span>
+                        </div>
+                    {% endif %}
+                    {% if property.possession_status %}
+                        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                            <span class="text-gray-400 block font-bold text-[10px] uppercase">Possession Status</span>
+                            <span class="font-black text-gray-800">{{ property.get_possession_status_display }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
+                <h2 class="text-lg font-black text-gray-900">About Property</h2>
+                <p class="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{{ property.description }}</p>
+            </div>
+
+            <!-- Amenities & Facilities -->
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h2 class="text-lg font-black text-gray-900">Amenities & Features</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {% for pa in amenities %}
+                        <div class="bg-gray-50 border border-gray-200 p-3 rounded-2xl flex items-center space-x-3 text-xs font-bold text-gray-800">
+                            <span>✅</span>
+                            <span>{{ pa.amenity.name }}</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-xs text-gray-400 font-medium">Standard community amenities included.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Location & Map Section -->
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h2 class="text-lg font-black text-gray-900">Location & Neighborhood</h2>
+                <p class="text-xs text-gray-600 font-medium">
+                    📍 {{ property.address }}, {{ property.locality.name }}, {{ property.city.name }} — Pincode: {{ property.pincode|default:"Available upon inquiry" }}
+                </p>
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between text-xs font-bold">
+                    <span>Coordinates: {{ property.latitude }}, {{ property.longitude }}</span>
+                    <a href="https://maps.google.com/?q={{ property.latitude }},{{ property.longitude }}" target="_blank" class="bg-brand-primary text-white px-4 py-2 rounded-xl hover:bg-brand-hover transition shadow-sm">
+                        🗺️ Open in Google Maps
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Contact & Visit Actions -->
+        <div class="space-y-6">
+            <!-- Owner / Agent Info Card -->
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-6 sticky top-24">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-brand-primary text-white rounded-2xl flex items-center justify-center font-black text-lg shadow-md">
+                        {{ property.owner.username|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-brand-primary uppercase">Listed By</span>
+                        <h3 class="text-base font-black text-gray-900">
+                            {{ property.owner.get_full_name|default:property.owner.username }}
+                        </h3>
+                        <p class="text-xs text-gray-500 font-medium">{{ property.owner.get_role_display }}</p>
+                    </div>
+                </div>
+
+                <hr class="border-gray-100">
+
+                <div class="space-y-4">
+                    <!-- Send Enquiry Form -->
+                    <form method="POST" action="{% url 'engagements:send-inquiry' property.slug %}" class="space-y-3">
+                        {% csrf_token %}
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Contact Owner / Agent</label>
+                        <textarea name="message" rows="2" placeholder="I'm interested in this property. Please contact me." class="bg-gray-50 border border-gray-200 p-2.5 rounded-xl w-full text-xs font-bold text-gray-800 outline-none"></textarea>
+                        <button type="submit" class="block w-full text-center bg-brand-primary hover:bg-brand-hover text-white py-3 rounded-xl text-xs font-bold transition shadow-sm">
+                            💬 Send Inquiry / Lead
+                        </button>
+                    </form>
+
+                    <hr class="border-gray-100">
+
+                    <!-- Schedule Property Visit Form -->
+                    <form method="POST" action="{% url 'engagements:schedule-visit' property.slug %}" class="space-y-3">
+                        {% csrf_token %}
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Schedule Property Visit</label>
+                        <input type="date" name="visit_date" required class="bg-gray-50 border border-gray-200 p-2.5 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <input type="time" name="visit_time" value="10:00" required class="bg-gray-50 border border-gray-200 p-2.5 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <button type="submit" class="block w-full text-center bg-gray-900 hover:bg-black text-white py-3 rounded-xl text-xs font-bold transition">
+                            📅 Request Site Visit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Properties Recommendations -->
+    {% if similar_properties %}
+        <div class="space-y-6 pt-8 border-t border-gray-200">
+            <h2 class="text-xl font-black text-gray-900">Similar Properties in {{ property.city.name }}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for prop in similar_properties %}
+                    {% include 'components/property_card.html' with prop=prop %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

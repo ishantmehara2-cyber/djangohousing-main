@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home Loan Eligibility Calculator | Housing..{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-r from-gray-900 via-gray-800 to-red-950 text-white py-12 px-4 sm:px-6">
+    <div class="max-w-4xl mx-auto text-center space-y-3">
+        <span class="bg-red-600/30 text-red-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            Interactive Calculator
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight">Home Loan Eligibility & EMI Calculator</h1>
+        <p class="text-gray-300 text-sm max-w-2xl mx-auto">
+            Estimate your maximum borrowing limit and monthly EMI based on your net income, tenure, and existing financial obligations.
+        </p>
+    </div>
+</section>
+
+<section class="py-10 bg-gray-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <!-- Input Form Card -->
+            <div class="lg:col-span-6 bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm">
+                <h3 class="text-lg font-black text-gray-900 mb-6 flex items-center justify-between">
+                    <span>Enter Your Financial Details</span>
+                    <a href="{% url 'services:loan-calculator' %}" class="text-xs font-bold text-gray-500 hover:text-brand-primary">
+                        Reset Form
+                    </a>
+                </h3>
+
+                <form method="GET" action="{% url 'services:loan-calculator' %}" class="space-y-4" id="calculator-form">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Net Monthly Income (₹) *</label>
+                        {{ form.monthly_income }}
+                        {% if form.monthly_income.errors %}
+                        <p class="text-red-500 text-[11px] mt-1">{{ form.monthly_income.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Existing Monthly EMIs (₹)</label>
+                        {{ form.existing_emi }}
+                        <span class="text-[10px] text-gray-500">Include personal loans, car loans, credit card EMIs. Enter 0 if none.</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Tenure (Years) *</label>
+                            {{ form.tenure_years }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Interest Rate (% p.a.) *</label>
+                            {{ form.interest_rate }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Max FOIR Cap (% of Income)</label>
+                        {{ form.foir_percentage }}
+                        <span class="text-[10px] text-gray-500">Fixed Obligation to Income Ratio (Default 50% for standard banks).</span>
+                    </div>
+
+                    <div class="pt-2 flex gap-3">
+                        <button type="submit" class="flex-1 bg-brand-primary hover:bg-brand-hover text-white font-bold py-3 rounded-xl transition shadow text-sm">
+                            Calculate Eligibility
+                        </button>
+                        <a href="{% url 'services:loan-calculator' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-4 py-3 rounded-xl transition text-sm">
+                            Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Calculation Output / Results Card -->
+            <div class="lg:col-span-6 space-y-6">
+                {% if result %}
+                <div class="bg-gray-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-6">
+                    <div class="border-b border-gray-800 pb-4">
+                        <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Estimated Loan Capacity</p>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white mt-1">
+                            ₹ {{ result.max_loan_amount|floatformat:0 }}
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-1">Estimated eligible loan amount for {{ result.tenure_years }} years @ {{ result.annual_rate }}%</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <span class="text-xs text-gray-400 block">Est. Monthly EMI</span>
+                            <span class="text-xl font-bold text-white">₹ {{ result.estimated_emi|floatformat:0 }}</span>
+                        </div>
+                        <div class="bg-white/5 p-4 rounded-2xl border border-white/10">
+                            <span class="text-xs text-gray-400 block">Available EMI Limit</span>
+                            <span class="text-xl font-bold text-emerald-400">₹ {{ result.max_available_emi|floatformat:0 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 text-xs text-gray-300 border-t border-gray-800 pt-4">
+                        <div class="flex justify-between">
+                            <span>Monthly Net Income:</span>
+                            <span class="font-bold text-white">₹ {{ result.monthly_income|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Existing Monthly EMIs:</span>
+                            <span class="font-bold text-white">₹ {{ result.existing_emi|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Total Loan Repayment:</span>
+                            <span class="font-bold text-white">₹ {{ result.total_repayment|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Total Payable Interest:</span>
+                            <span class="font-bold text-red-400">₹ {{ result.total_interest|floatformat:0 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <a href="{% url 'services:bank-loans' %}#enquiry-section" class="block text-center w-full bg-brand-primary hover:bg-brand-hover text-white font-bold py-3 rounded-xl transition text-sm">
+                            Apply for Pre-Sanction Loan
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-white p-8 rounded-3xl border border-gray-200 text-center space-y-4">
+                    <div class="w-12 h-12 bg-red-50 text-brand-primary rounded-2xl flex items-center justify-center mx-auto text-xl font-black">
+                        %
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Check Your Loan Capacity</h3>
+                    <p class="text-xs text-gray-600 max-w-sm mx-auto">
+                        Enter your monthly net salary or business income and tenure to see how much home loan you are eligible for across top banks.
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Calculation Model Disclosure -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-200 space-y-3 text-xs text-gray-600">
+                    <h4 class="font-bold text-gray-900 text-sm">Transparent Mathematical Model</h4>
+                    <p>
+                        This calculator uses standard present-value annuity calculation models. Banks cap total monthly EMI commitments (existing EMIs + proposed home loan EMI) up to <strong>FOIR (50%)</strong> of your net monthly income.
+                    </p>
+                    <p class="text-[11px] text-gray-500 italic">
+                        Formula used: Present Value $PV = EMI \times \frac{(1+r)^n - 1}{r(1+r)^n}$, where $r$ is the monthly interest rate and $n$ is total tenure in months.
+                    </p>
+                    <hr class="border-gray-100">
+                    <p class="text-[10px] text-gray-400">
+                        *Disclaimer: Results shown are estimates for guidance only. Actual home loan approval depends on credit score, property appraisal, age, legal verification, and bank policies.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

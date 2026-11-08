@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rental Agreement Services | Housing..{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-r from-gray-900 via-gray-800 to-red-950 text-white py-14 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="md:w-2/3 space-y-4">
+            <span class="inline-block bg-red-600/30 text-red-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                Legal & Documentation Services
+            </span>
+            <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                Online <span class="text-brand-primary">Rental Agreement</span> Service
+            </h1>
+            <p class="text-gray-300 text-sm sm:text-base max-w-2xl">
+                Get legally verified, e-stamped, or registered rent agreements delivered to your doorstep without visiting government offices.
+            </p>
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+                <a href="#request-form" class="bg-brand-primary hover:bg-brand-hover text-white text-sm font-bold px-6 py-3 rounded-xl transition shadow">
+                    Create Rental Agreement
+                </a>
+                <a href="#pricing-plans" class="bg-white/10 hover:bg-white/20 text-white text-sm font-bold px-6 py-3 rounded-xl transition backdrop-blur border border-white/20">
+                    View Pricing & Plans
+                </a>
+            </div>
+        </div>
+
+        <div class="md:w-1/3 bg-white/10 p-6 rounded-3xl border border-white/10 backdrop-blur-md w-full">
+            <h3 class="text-base font-bold mb-3">Why Choose Housing.. Rental Agreements?</h3>
+            <ul class="space-y-2 text-xs text-gray-200">
+                <li class="flex items-center gap-2">✓ 100% Legally Valid E-Stamp Papers</li>
+                <li class="flex items-center gap-2">✓ Custom Clause & Lock-in Period Support</li>
+                <li class="flex items-center gap-2">✓ Digital Biometric & Notary Options</li>
+                <li class="flex items-center gap-2">✓ Delivered within 24-48 Hours</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Process Section -->
+<section class="py-12 bg-gray-50 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <h2 class="text-2xl sm:text-3xl font-black text-gray-900">How It Works</h2>
+            <p class="text-sm text-gray-600 mt-1">Simple 4-step digital workflow</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-2xl border border-gray-200">
+                <div class="w-10 h-10 bg-red-100 text-brand-primary font-black rounded-xl flex items-center justify-center mb-3">1</div>
+                <h4 class="font-bold text-gray-900 text-sm mb-1">Fill Agreement Request</h4>
+                <p class="text-xs text-gray-600">Enter tenant, owner, property, and rent details.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-gray-200">
+                <div class="w-10 h-10 bg-red-100 text-brand-primary font-black rounded-xl flex items-center justify-center mb-3">2</div>
+                <h4 class="font-bold text-gray-900 text-sm mb-1">Draft Preview & Approval</h4>
+                <p class="text-xs text-gray-600">Review custom clauses & terms with your landlord/tenant.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-gray-200">
+                <div class="w-10 h-10 bg-red-100 text-brand-primary font-black rounded-xl flex items-center justify-center mb-3">3</div>
+                <h4 class="font-bold text-gray-900 text-sm mb-1">E-Stamp & Signature</h4>
+                <p class="text-xs text-gray-600">Govt e-Stamp paper generation & biometric signature options.</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-gray-200">
+                <div class="w-10 h-10 bg-red-100 text-brand-primary font-black rounded-xl flex items-center justify-center mb-3">4</div>
+                <h4 class="font-bold text-gray-900 text-sm mb-1">Doorstep & Digital Delivery</h4>
+                <p class="text-xs text-gray-600">Receive soft copy instantly on email & physical copy at your door.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Transparent Pricing Plans -->
+<section id="pricing-plans" class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <h2 class="text-2xl sm:text-3xl font-black text-gray-900">Transparent Service Packages</h2>
+            <p class="text-sm text-gray-600 mt-1">No hidden charges or unexpected government fee markups</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 hover:shadow-lg transition">
+                <span class="bg-gray-100 text-gray-800 text-[10px] font-bold px-3 py-1 rounded-full uppercase">Basic</span>
+                <h3 class="text-xl font-bold text-gray-900 mt-3">E-Stamped Agreement</h3>
+                <div class="my-4">
+                    <span class="text-3xl font-black text-gray-900">₹ 499</span>
+                    <span class="text-xs text-gray-500"> + stamp duty</span>
+                </div>
+                <ul class="text-xs text-gray-600 space-y-2 mb-6">
+                    <li>✓ Official Govt E-Stamp Paper</li>
+                    <li>✓ Custom Draft Generator</li>
+                    <li>✓ PDF Delivery within 24 Hours</li>
+                    <li>✓ Standard Clauses Included</li>
+                </ul>
+                <a href="#request-form" class="block text-center w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-xl text-xs transition">
+                    Select Plan
+                </a>
+            </div>
+
+            <div class="bg-white border-2 border-brand-primary rounded-3xl p-6 shadow-md relative">
+                <span class="bg-brand-primary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Popular</span>
+                <h3 class="text-xl font-bold text-gray-900 mt-3">Notarized Agreement</h3>
+                <div class="my-4">
+                    <span class="text-3xl font-black text-brand-primary">₹ 799</span>
+                    <span class="text-xs text-gray-500"> + stamp duty</span>
+                </div>
+                <ul class="text-xs text-gray-600 space-y-2 mb-6">
+                    <li>✓ Govt E-Stamp Paper Included</li>
+                    <li>✓ Official Notary Attestation & Seal</li>
+                    <li>✓ Legal Review Assistance</li>
+                    <li>✓ Soft Copy + Physical Courier</li>
+                </ul>
+                <a href="#request-form" class="block text-center w-full bg-brand-primary hover:bg-brand-hover text-white font-bold py-2.5 rounded-xl text-xs transition">
+                    Select Plan
+                </a>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-3xl p-6 hover:shadow-lg transition">
+                <span class="bg-gray-100 text-gray-800 text-[10px] font-bold px-3 py-1 rounded-full uppercase">Comprehensive</span>
+                <h3 class="text-xl font-bold text-gray-900 mt-3">Registered Agreement</h3>
+                <div class="my-4">
+                    <span class="text-3xl font-black text-gray-900">₹ 1,999</span>
+                    <span class="text-xs text-gray-500"> + Govt Registration Fee</span>
+                </div>
+                <ul class="text-xs text-gray-600 space-y-2 mb-6">
+                    <li>✓ Doorstep Biometric Verification</li>
+                    <li>✓ Government Sub-Registrar Filing</li>
+                    <li>✓ 100% Court Admissible Document</li>
+                    <li>✓ Dedicated Executive Assistance</li>
+                </ul>
+                <a href="#request-form" class="block text-center w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-xl text-xs transition">
+                    Select Plan
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Request Submission Form -->
+<section id="request-form" class="py-12 bg-gray-50 border-t border-gray-200">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+        <div class="bg-white p-6 sm:p-10 rounded-3xl border border-gray-200 shadow-md">
+            <h2 class="text-2xl font-black text-gray-900 text-center mb-2">Submit Rental Agreement Request</h2>
+            <p class="text-xs text-gray-600 text-center mb-6">Fill in the details below. You will receive a unique tracking reference number.</p>
+
+            <form method="POST" action="{% url 'services:rental-agreement' %}" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Full Name *</label>
+                        {{ form.full_name }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Mobile Number *</label>
+                        {{ form.phone }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Email Address *</label>
+                        {{ form.email }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Agreement Type *</label>
+                        {{ form.agreement_type }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Property Address *</label>
+                    {{ form.property_address }}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">City *</label>
+                        {{ form.city_name }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Monthly Rent (₹) *</label>
+                        {{ form.monthly_rent }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Deposit (₹) *</label>
+                        {{ form.security_deposit }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Tenancy Period (Months)</label>
+                        {{ form.tenancy_period_months }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Lock-in Period (Months)</label>
+                        {{ form.lock_in_period_months }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Special Notes / Clauses</label>
+                    {{ form.notes }}
+                </div>
+
+                <button type="submit" class="w-full bg-brand-primary hover:bg-brand-hover text-white font-bold py-3.5 rounded-xl transition shadow text-sm">
+                    Submit Agreement Request
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

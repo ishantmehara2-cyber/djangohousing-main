@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Bad Request | Housing..{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-24 text-center space-y-6">
+    <div class="w-20 h-20 bg-amber-100 text-amber-700 rounded-3xl flex items-center justify-center mx-auto text-3xl font-black">400</div>
+    <h1 class="text-3xl font-black text-gray-900">Bad Request</h1>
+    <p class="text-sm text-gray-500">The server could not understand the request due to invalid syntax.</p>
+    <a href="{% url 'home' %}" class="inline-block bg-brand-primary text-white text-xs font-bold px-8 py-3.5 rounded-xl">Go Home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Trusted place to find a home | Housing...{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <!-- Hero Banner Section -->
+    <section class="hero-banner">
+        <div class="hero-content">
+            <div class="hero-trust-badge">
+                <span>🛡️ 100% Verified Real Estate Marketplace</span>
+            </div>
+
+            <h1 class="hero-title">
+                Trusted place to find a home
+            </h1>
+            <p class="hero-subtitle">
+                Search verified apartments, villas, plots, and commercial spaces across India's top cities.
+            </p>
+
+            <!-- Multi-tab Search Card -->
+            <div class="search-card-container">
+                <!-- Search Tabs -->
+                <div class="search-tabs">
+                    <button type="button" class="search-tab-btn active" data-purpose="BUY">Buy</button>
+                    <button type="button" class="search-tab-btn" data-purpose="RENT">Rent</button>
+                    <button type="button" class="search-tab-btn" data-purpose="COMMERCIAL">Commercial</button>
+                    <button type="button" class="search-tab-btn" data-purpose="PLOT">Plots / Land</button>
+                </div>
+
+                <!-- Search Form -->
+                <form action="{% url 'properties:search' %}" method="GET" class="search-form-grid">
+                    <input type="hidden" name="listing_purpose" id="search-purpose-input" value="BUY">
+
+                    <div class="search-field-box">
+                        <label class="search-field-label">Locality / Location</label>
+                        <select name="locality" class="search-field-select cursor-pointer">
+                            <option value="">All Localities</option>
+                            {% for loc in top_localities %}
+                                <option value="{{ loc.slug }}">{{ loc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="search-field-box">
+                        <label class="search-field-label">Property Type</label>
+                        <select name="property_type" class="search-field-select cursor-pointer">
+                            <option value="">All Types</option>
+                            {% for pt in property_types %}
+                                <option value="{{ pt.slug }}">{{ pt.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="search-field-box">
+                        <label class="search-field-label">Max Budget</label>
+                        <select name="max_price" class="search-field-select cursor-pointer">
+                            <option value="">Any Budget</option>
+                            <option value="5000000">₹ 50 Lakhs</option>
+                            <option value="10000000">₹ 1 Crore</option>
+                            <option value="20000000">₹ 2 Crores</option>
+                            <option value="50000000">₹ 5 Crores+</option>
+                        </select>
+                    </div>
+
+                    <div class="search-field-box">
+                        <label class="search-field-label">Bedrooms</label>
+                        <select name="bhk" class="search-field-select cursor-pointer">
+                            <option value="">Any BHK</option>
+                            <option value="1">1 BHK</option>
+                            <option value="2">2 BHK</option>
+                            <option value="3">3 BHK</option>
+                            <option value="4">4+ BHK</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-hero-search">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <span>Search</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Homepage Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+
+        <!-- Featured Properties Section -->
+        <section class="space-y-8">
+            <div class="section-header">
+                <span class="section-tagline">Handpicked & Verified</span>
+                <h2 class="section-title">Featured Properties</h2>
+            </div>
+
+            {% if featured_properties %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {% for prop in featured_properties %}
+                        {% include 'includes/property_card.html' with prop=prop %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-card">
+                    <h3 class="empty-state-title">No Featured Properties Active Yet</h3>
+                    <p class="empty-state-desc">Be the first homeowner or real estate agent to post a verified property listing.</p>
+                    <a href="{% url 'properties:post-property' %}" class="inline-block bg-brand-primary text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-brand-hover transition shadow-sm">
+                        + Post Property Free
+                    </a>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Popular Localities Section -->
+        <section class="space-y-8">
+            <div class="section-header">
+                <span class="section-tagline">Top Destinations</span>
+                <h2 class="section-title">Explore Properties in Popular Localities</h2>
+            </div>
+
+            {% if top_localities %}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                    {% for loc in top_localities %}
+                        <a href="{% url 'properties:search' %}?locality={{ loc.slug }}" class="city-card">
+                            <div class="w-12 h-12 bg-brand-light text-brand-primary rounded-2xl mx-auto flex items-center justify-center font-black text-lg mb-3">
+                                {{ loc.name|slice:":1" }}
+                            </div>
+                            <h3 class="city-name">{{ loc.name }}</h3>
+                            <p class="text-xs text-gray-400 font-medium mt-1">Explore Local Properties</p>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-card">
+                    <p class="text-sm font-bold text-gray-600">No popular localities configured.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Top Localities Section -->
+        {% if top_localities %}
+        <section class="space-y-8">
+            <div class="section-header">
+                <span class="section-tagline">Neighbourhoods</span>
+                <h2 class="section-title">Explore Popular Localities</h2>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {% for loc in top_localities %}
+                    <a href="{% url 'properties:search' %}?city={{ loc.city.slug }}&locality={{ loc.slug }}" class="bg-white border border-gray-200 hover:border-brand-primary p-4 rounded-2xl flex items-center justify-between group transition">
+                        <div>
+                            <p class="font-bold text-sm text-gray-900 group-hover:text-brand-primary transition">{{ loc.name }}</p>
+                            <p class="text-[11px] text-gray-400 font-medium">{{ loc.city.name }}</p>
+                        </div>
+                        <span class="text-gray-400 group-hover:text-brand-primary font-bold">→</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Buy Properties Section -->
+        {% if buy_properties %}
+        <section class="space-y-8">
+            <div class="flex items-end justify-between">
+                <div>
+                    <span class="section-tagline">Ready to Move</span>
+                    <h2 class="section-title">Properties for Buy / Sale</h2>
+                </div>
+                <a href="{% url 'properties:search' %}?listing_purpose=BUY" class="text-xs font-bold text-brand-primary hover:underline">
+                    View All Buy Listings →
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for prop in buy_properties %}
+                    {% include 'includes/property_card.html' with prop=prop %}
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Rental Properties Section -->
+        {% if rent_properties %}
+        <section class="space-y-8">
+            <div class="flex items-end justify-between">
+                <div>
+                    <span class="section-tagline">Affordable & Luxury</span>
+                    <h2 class="section-title">Rental Homes & Apartments</h2>
+                </div>
+                <a href="{% url 'properties:search' %}?listing_purpose=RENT" class="text-xs font-bold text-brand-primary hover:underline">
+                    View All Rental Listings →
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {% for prop in rent_properties %}
+                    {% include 'includes/property_card.html' with prop=prop %}
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Value Proposition / Why Choose Us -->
+        <section class="bg-white border border-gray-200 rounded-3xl p-8 sm:p-12 shadow-sm space-y-8">
+            <div class="text-center space-y-2 max-w-2xl mx-auto">
+                <span class="section-tagline">Why Choose Housing...</span>
+                <h2 class="section-title">The Smarter Way to Find Real Estate</h2>
+                <p class="text-xs text-gray-500 font-medium">Built with Django 5 and MySQL for lightning-fast searches and absolute reliability.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+                <div class="space-y-3 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div class="w-12 h-12 bg-brand-light text-brand-primary rounded-xl flex items-center justify-center font-bold text-xl mx-auto">🛡️</div>
+                    <h3 class="font-black text-sm text-gray-900">100% Verified Listings</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed">Every apartment, villa, and plot goes through strict verification checks before going live.</p>
+                </div>
+                <div class="space-y-3 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div class="w-12 h-12 bg-brand-light text-brand-primary rounded-xl flex items-center justify-center font-bold text-xl mx-auto">💬</div>
+                    <h3 class="font-black text-sm text-gray-900">Direct Owner Connect</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed">Talk directly with property owners and verified brokers with zero hidden brokerage.</p>
+                </div>
+                <div class="space-y-3 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div class="w-12 h-12 bg-brand-light text-brand-primary rounded-xl flex items-center justify-center font-bold text-xl mx-auto">⚡</div>
+                    <h3 class="font-black text-sm text-gray-900">Instant Lead Alerts</h3>
+                    <p class="text-xs text-gray-500 leading-relaxed">Sellers get instant inquiries and leads directly on their dashboard and notifications.</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/homepage.js' %}"></script>
+{% endblock %}

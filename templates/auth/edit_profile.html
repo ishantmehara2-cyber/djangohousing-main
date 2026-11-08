@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile | Housing...{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+        <div class="space-y-1">
+            <h1 class="text-2xl font-black text-gray-900">Edit Profile</h1>
+            <p class="text-xs text-gray-400 font-medium">Update your personal information and contact details.</p>
+        </div>
+
+        <form method="POST" action="{% url 'accounts:edit_profile' %}" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Account Role</span>
+                    <p class="text-xs font-extrabold text-gray-800">{{ user.get_role_display }}</p>
+                </div>
+                <span class="text-[10px] font-bold text-gray-400 italic">Role changes must be requested via support</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.first_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.last_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Phone Number</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Profile Avatar</label>
+                {{ form.avatar }}
+                {% if form.avatar.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.avatar.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            {% if user.role == 'AGENT' or user.role == 'DEVELOPER' %}
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Agency / Business Name</label>
+                    {{ form.agency_name }}
+                    {% if form.agency_name.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.agency_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Bio / Business Overview</label>
+                {{ form.bio }}
+                {% if form.bio.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.bio.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center justify-between pt-4">
+                <a href="{% url 'accounts:profile' %}" class="text-xs font-bold text-gray-600 hover:text-gray-900">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-brand-primary hover:bg-brand-hover text-white px-6 py-3 rounded-xl font-bold text-xs transition shadow-sm">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}My Properties | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Header & Action -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-[10px] font-black text-brand-primary uppercase tracking-wider bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">
+                    SELLER MANAGEMENT PORTAL
+                </span>
+            </div>
+            <h1 class="text-2xl font-black text-gray-900 mt-2">My Properties Catalog</h1>
+            <p class="text-xs text-gray-500 font-medium">Manage your listings, track approval status, and submit drafts for admin review.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'properties:post-property' %}" class="bg-brand-primary hover:bg-brand-hover text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+                + Add New Property
+            </a>
+            <a href="{% url 'dashboard' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                Dashboard Home
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <a href="?status=ALL" class="bg-white border {% if status_filter == 'ALL' %}border-brand-primary bg-brand-50/30{% else %}border-gray-200{% endif %} p-5 rounded-2xl shadow-sm transition block">
+            <span class="text-[10px] font-bold text-gray-400 uppercase block">Total Listings</span>
+            <p class="text-2xl font-black text-gray-900 mt-1">{{ total_listings }}</p>
+        </a>
+        <a href="?status=DRAFT" class="bg-white border {% if status_filter == 'DRAFT' %}border-brand-primary bg-brand-50/30{% else %}border-gray-200{% endif %} p-5 rounded-2xl shadow-sm transition block">
+            <span class="text-[10px] font-bold text-gray-400 uppercase block">Drafts</span>
+            <p class="text-2xl font-black text-gray-900 mt-1">{{ draft_count }}</p>
+        </a>
+        <a href="?status=PENDING_APPROVAL" class="bg-white border {% if status_filter == 'PENDING_APPROVAL' %}border-brand-primary bg-brand-50/30{% else %}border-gray-200{% endif %} p-5 rounded-2xl shadow-sm transition block">
+            <span class="text-[10px] font-bold text-amber-600 uppercase block">Pending Review</span>
+            <p class="text-2xl font-black text-amber-600 mt-1">{{ pending_count }}</p>
+        </a>
+        <a href="?status=ACTIVE" class="bg-white border {% if status_filter == 'ACTIVE' %}border-brand-primary bg-brand-50/30{% else %}border-gray-200{% endif %} p-5 rounded-2xl shadow-sm transition block">
+            <span class="text-[10px] font-bold text-emerald-600 uppercase block">Approved / Active</span>
+            <p class="text-2xl font-black text-emerald-600 mt-1">{{ approved_count }}</p>
+        </a>
+        <a href="?status=REJECTED" class="bg-white border {% if status_filter == 'REJECTED' %}border-brand-primary bg-brand-50/30{% else %}border-gray-200{% endif %} p-5 rounded-2xl shadow-sm transition block">
+            <span class="text-[10px] font-bold text-red-600 uppercase block">Rejected</span>
+            <p class="text-2xl font-black text-red-600 mt-1">{{ rejected_count }}</p>
+        </a>
+    </div>
+
+    <!-- Properties Grid / Table -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-black text-gray-900">Listings (Filter: {{ status_filter }})</h2>
+        </div>
+
+        {% if properties %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for prop in properties %}
+                    <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+                        <div>
+                            <!-- Image Thumbnail -->
+                            <div class="h-48 bg-gray-100 relative overflow-hidden">
+                                {% with first_media=prop.media.first %}
+                                    {% if first_media %}
+                                        <img src="{{ first_media.file.url }}" alt="{{ prop.title }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-50">
+                                            No Image
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider
+                                    {% if prop.listing_state == 'ACTIVE' %} bg-emerald-600 text-white
+                                    {% elif prop.listing_state == 'PENDING_APPROVAL' %} bg-amber-500 text-white
+                                    {% elif prop.listing_state == 'REJECTED' %} bg-red-600 text-white
+                                    {% else %} bg-gray-800 text-white {% endif %}">
+                                    {{ prop.get_listing_state_display }}
+                                </span>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-5 space-y-3">
+                                <div class="flex items-baseline justify-between">
+                                    <span class="text-lg font-black text-gray-900">
+                                        {% if prop.listing_purpose == 'RENT' %}
+                                            {{ prop.rent|indian_rent }}
+                                        {% else %}
+                                            {{ prop.price|indian_currency }}
+                                        {% endif %}
+                                    </span>
+                                    <span class="text-[11px] font-bold text-brand-primary bg-brand-50 px-2 py-0.5 rounded">
+                                        {{ prop.property_type.name }}
+                                    </span>
+                                </div>
+                                <h3 class="font-black text-sm text-gray-900 line-clamp-1 group-hover:text-brand-primary transition">
+                                    {{ prop.title }}
+                                </h3>
+                                <p class="text-xs text-gray-500 font-medium">
+                                    📍 {{ prop.locality.name }}, {{ prop.city.name }}
+                                </p>
+                                <p class="text-[10px] text-gray-400">
+                                    Updated: {{ prop.updated_at|date:"M d, Y" }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card Actions -->
+                        <div class="p-5 pt-0 grid grid-cols-2 gap-2">
+                            <a href="{% url 'properties:detail' prop.slug %}" class="bg-gray-900 hover:bg-black text-white py-2.5 rounded-xl text-xs font-bold text-center transition">
+                                View
+                            </a>
+                            <a href="{% url 'properties:edit' prop.slug %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2.5 rounded-xl text-xs font-bold text-center transition">
+                                Edit
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-16 text-center space-y-4 shadow-sm">
+                <div class="text-4xl">📂</div>
+                <h3 class="text-lg font-black text-gray-900">No Properties Found</h3>
+                <p class="text-xs text-gray-500 max-w-sm mx-auto">
+                    You haven't created any property listings matching the selected status filter.
+                </p>
+                <div>
+                    <a href="{% url 'properties:post-property' %}" class="inline-block bg-brand-primary hover:bg-brand-hover text-white px-6 py-3 rounded-xl text-xs font-bold transition shadow-sm">
+                        + Add Your First Property
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

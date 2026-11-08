@@ -1,0 +1,322 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Property Form Field Management | Admin Panel{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-black text-gray-900">Property Form Field Management</h1>
+            <p class="text-xs text-gray-500 font-medium">Dynamically configure, add, edit, and reorder fields for the customer property creation form.</p>
+        </div>
+        <button onclick="openAddFieldModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+            + Add New Property Field
+        </button>
+    </div>
+
+    <!-- Fields Table -->
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <table class="w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-200 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
+                    <th class="p-4">Order</th>
+                    <th class="p-4">Field Key</th>
+                    <th class="p-4">Display Label</th>
+                    <th class="p-4">Type</th>
+                    <th class="p-4">Required</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4">Applicable Categories</th>
+                    <th class="p-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-gray-700 font-medium">
+                {% for f in fields %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-4 font-bold">{{ f.order }}</td>
+                    <td class="p-4 font-mono text-indigo-600 font-bold">{{ f.key }}</td>
+                    <td class="p-4 font-bold text-gray-900">{{ f.label }}</td>
+                    <td class="p-4 uppercase text-[10px] bg-gray-100 rounded px-2 py-1 inline-block my-2">{{ f.get_field_type_display }}</td>
+                    <td class="p-4">
+                        {% if f.required %}
+                            <span class="bg-red-50 text-red-600 px-2 py-0.5 rounded-full text-[10px] font-bold">Required</span>
+                        {% else %}
+                            <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px] font-bold">Optional</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4">
+                        <button onclick="toggleFieldStatus({{ f.id }}, {{ f.is_active|lower }})" class="px-2.5 py-1 rounded-full text-[10px] font-bold transition {% if f.is_active %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% else %}bg-gray-200 text-gray-600 hover:bg-gray-300{% endif %}">
+                            {% if f.is_active %}Active{% else %}Disabled{% endif %}
+                        </button>
+                    </td>
+                    <td class="p-4 text-gray-500 text-[11px]">
+                        {{ f.applicable_categories|join:", " }}
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="editField({{ f.id }})" class="text-indigo-600 hover:underline font-bold">Edit</button>
+                        {% if f.field_type == 'select' or f.field_type == 'multiselect' or f.field_type == 'radio' %}
+                            <button onclick="manageOptions({{ f.id }}, '{{ f.label }}')" class="text-emerald-600 hover:underline font-bold">Options</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="p-8 text-center text-gray-400 font-bold">No property form fields configured yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Field Modal -->
+<div id="fieldModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-8 space-y-6 shadow-2xl">
+        <div class="flex justify-between items-center">
+            <h2 id="modalTitle" class="text-lg font-black text-gray-900">Add New Property Field</h2>
+            <button onclick="closeFieldModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+        </div>
+        <form id="fieldForm" onsubmit="saveField(event)" class="space-y-4">
+            <input type="hidden" id="fieldId" name="id">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Field Key (Unique slug) *</label>
+                    <input type="text" id="fieldKey" name="key" required placeholder="e.g. parking_availability" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Display Label *</label>
+                    <input type="text" id="fieldLabel" name="label" required placeholder="e.g. Parking Availability" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Field Type *</label>
+                    <select id="fieldType" name="field_type" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <option value="text">Text</option>
+                        <option value="textarea">Textarea</option>
+                        <option value="number">Number</option>
+                        <option value="currency">Currency (₹)</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                        <option value="select">Single Select</option>
+                        <option value="multiselect">Multi-Select</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="radio">Radio Buttons</option>
+                        <option value="date">Date</option>
+                        <option value="yes_no">Yes/No</option>
+                        <option value="file">File Upload</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Display Order</label>
+                    <input type="number" id="fieldOrder" name="order" value="0" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Placeholder</label>
+                    <input type="text" id="fieldPlaceholder" name="placeholder" placeholder="Enter placeholder..." class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Help Text</label>
+                    <input type="text" id="fieldHelpText" name="help_text" placeholder="Helper description..." class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Applicable Categories (comma separated or ALL)</label>
+                <input type="text" id="fieldCategories" name="applicable_categories" value="ALL" placeholder="RESIDENTIAL, COMMERCIAL, ALL" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" id="fieldRequired" name="required" class="rounded text-indigo-600 focus:ring-indigo-500">
+                <label for="fieldRequired" class="text-xs font-bold text-gray-700">Mark as Required Field</label>
+            </div>
+
+            <div class="flex space-x-4 pt-4 border-t border-gray-100">
+                <button type="button" onclick="closeFieldModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-xl font-bold text-xs transition">Cancel</button>
+                <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">Save Field</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Options Management Modal -->
+<div id="optionsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl">
+        <div class="flex justify-between items-center">
+            <h2 id="optionsModalTitle" class="text-lg font-black text-gray-900">Manage Dropdown Options</h2>
+            <button onclick="closeOptionsModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+        </div>
+        <input type="hidden" id="optionsFieldId">
+        <div id="optionsList" class="space-y-3 max-h-60 overflow-y-auto">
+            <!-- Dynamic option rows -->
+        </div>
+        <button onclick="addOptionRow()" class="w-full bg-gray-100 hover:bg-gray-200 text-indigo-600 py-2.5 rounded-xl font-bold text-xs transition">+ Add Option</button>
+        <div class="flex space-x-4 pt-4 border-t border-gray-100">
+            <button type="button" onclick="closeOptionsModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-xl font-bold text-xs transition">Cancel</button>
+            <button type="button" onclick="saveOptions()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs transition shadow-md">Save Options</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAddFieldModal() {
+    document.getElementById('modalTitle').innerText = 'Add New Property Field';
+    document.getElementById('fieldId').value = '';
+    document.getElementById('fieldForm').reset();
+    document.getElementById('fieldModal').classList.remove('hidden');
+    document.getElementById('fieldModal').classList.add('flex');
+}
+
+function closeFieldModal() {
+    document.getElementById('fieldModal').classList.remove('flex');
+    document.getElementById('fieldModal').classList.add('hidden');
+}
+
+function toggleFieldStatus(fieldId, currentStatus) {
+    fetch(`/api/admin/property-fields/${fieldId}/status`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+        body: JSON.stringify({is_active: !currentStatus})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to update status');
+        }
+    });
+}
+
+function editField(fieldId) {
+    fetch(`/api/admin/property-fields/${fieldId}`)
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            const f = res.data;
+            document.getElementById('modalTitle').innerText = 'Edit Property Field';
+            document.getElementById('fieldId').value = f.id;
+            document.getElementById('fieldKey').value = f.key;
+            document.getElementById('fieldLabel').value = f.label;
+            document.getElementById('fieldType').value = f.type;
+            document.getElementById('fieldOrder').value = f.order;
+            document.getElementById('fieldPlaceholder').value = f.placeholder;
+            document.getElementById('fieldHelpText').value = f.help_text;
+            document.getElementById('fieldCategories').value = (f.applicable_categories || []).join(', ');
+            document.getElementById('fieldRequired').checked = f.required;
+
+            document.getElementById('fieldModal').classList.remove('hidden');
+            document.getElementById('fieldModal').classList.add('flex');
+        }
+    });
+}
+
+function saveField(e) {
+    e.preventDefault();
+    const fieldId = document.getElementById('fieldId').value;
+    const url = fieldId ? `/api/admin/property-fields/${fieldId}` : '/api/admin/property-fields';
+    const method = fieldId ? 'PUT' : 'POST';
+
+    const payload = {
+        key: document.getElementById('fieldKey').value,
+        label: document.getElementById('fieldLabel').value,
+        type: document.getElementById('fieldType').value,
+        order: parseInt(document.getElementById('fieldOrder').value) || 0,
+        placeholder: document.getElementById('fieldPlaceholder').value,
+        help_text: document.getElementById('fieldHelpText').value,
+        applicable_categories: document.getElementById('fieldCategories').value,
+        required: document.getElementById('fieldRequired').checked
+    };
+
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Error saving field');
+        }
+    });
+}
+
+let currentEditingFieldId = null;
+function manageOptions(fieldId, fieldLabel) {
+    currentEditingFieldId = fieldId;
+    document.getElementById('optionsModalTitle').innerText = `Manage Options: ${fieldLabel}`;
+    document.getElementById('optionsFieldId').value = fieldId;
+
+    fetch(`/api/admin/property-fields/${fieldId}`)
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            const list = document.getElementById('optionsList');
+            list.innerHTML = '';
+            (res.data.options || []).forEach(opt => {
+                appendOptionRow(opt.label, opt.value);
+            });
+            if ((res.data.options || []).length === 0) {
+                appendOptionRow('', '');
+            }
+            document.getElementById('optionsModal').classList.remove('hidden');
+            document.getElementById('optionsModal').classList.add('flex');
+        }
+    });
+}
+
+function appendOptionRow(label = '', value = '') {
+    const list = document.getElementById('optionsList');
+    const div = document.createElement('div');
+    div.className = 'flex space-x-2 items-center';
+    div.innerHTML = `
+        <input type="text" placeholder="Label" value="${label}" class="opt-label bg-gray-50 border border-gray-200 p-2.5 rounded-xl flex-1 text-xs font-bold outline-none">
+        <input type="text" placeholder="Value" value="${value}" class="opt-val bg-gray-50 border border-gray-200 p-2.5 rounded-xl flex-1 text-xs font-bold outline-none">
+        <button type="button" onclick="this.parentElement.remove()" class="text-red-500 font-bold px-2">✕</button>
+    `;
+    list.appendChild(div);
+}
+
+function addOptionRow() {
+    appendOptionRow();
+}
+
+function closeOptionsModal() {
+    document.getElementById('optionsModal').classList.remove('flex');
+    document.getElementById('optionsModal').classList.add('hidden');
+}
+
+function saveOptions() {
+    const fieldId = document.getElementById('optionsFieldId').value;
+    const rows = document.querySelectorAll('#optionsList > div');
+    const options = [];
+    rows.forEach((row, idx) => {
+        const label = row.querySelector('.opt-label').value.trim();
+        const value = row.querySelector('.opt-val').value.trim();
+        if (label && value) {
+            options.push({label, value, order: idx});
+        }
+    });
+
+    fetch(`/api/admin/property-fields/${fieldId}/options`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+        body: JSON.stringify({options})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            closeOptionsModal();
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to save options');
+        }
+    });
+}
+</script>
+{% endblock %}

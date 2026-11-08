@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Register | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto px-4 py-12">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+        <div class="text-center space-y-1">
+            <h1 class="text-2xl font-black text-gray-900">Create Account</h1>
+            <p class="text-xs text-gray-400 font-medium">Join India's trusted real estate marketplace.</p>
+        </div>
+
+        <form method="POST" action="{% url 'accounts:register' %}" class="space-y-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-bold space-y-1">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.first_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.last_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email Address</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Phone Number</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Account Type (I am a)</label>
+                {{ form.role }}
+                {% if form.role.errors %}
+                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.role.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Password</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Confirm Password</label>
+                    {{ form.confirm_password }}
+                    {% if form.confirm_password.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.confirm_password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-primary hover:bg-brand-hover text-white py-3 rounded-xl font-bold text-xs transition shadow-sm">
+                Create Account
+            </button>
+        </form>
+
+        <p class="text-center text-xs text-gray-500 font-medium">
+            Already have an account? <a href="{% url 'accounts:login' %}" class="text-brand-primary font-bold hover:underline">Login here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

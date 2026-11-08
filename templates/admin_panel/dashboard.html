@@ -1,0 +1,65 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Admin Dashboard | Housing...{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-8">
+    <div>
+        <h1 class="text-2xl font-black text-gray-900">Platform Overview & Live Statistics</h1>
+        <p class="text-xs text-gray-500 font-medium mt-1">Real-time metrics calculated directly from MySQL database records.</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Total Users</span>
+            <p class="text-3xl font-black text-gray-900">{{ total_users }}</p>
+            <p class="text-[11px] text-gray-500 font-medium pt-1">Buyers: {{ buyers_count }} | Tenants: {{ tenants_count }} | Owners: {{ owners_count }}</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Total Properties</span>
+            <p class="text-3xl font-black text-gray-900">{{ total_properties }}</p>
+            <p class="text-[11px] text-emerald-600 font-bold pt-1">Active: {{ active_properties }} | Pending: {{ pending_properties_count }}</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Total Enquiries</span>
+            <p class="text-3xl font-black text-gray-900">{{ total_enquiries }}</p>
+            <p class="text-[11px] text-gray-500 font-medium pt-1">Leads & Inquiries received</p>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm space-y-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Scheduled Visits</span>
+            <p class="text-3xl font-black text-gray-900">{{ total_visits }}</p>
+            <p class="text-[11px] text-gray-500 font-medium pt-1">Client site inspections</p>
+        </div>
+    </div>
+
+    <!-- Pending Properties Queue Quick Review -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-black text-gray-900">Pending Property Approvals ({{ pending_properties|length }})</h2>
+            <a href="{% url 'moderation:pending-properties' %}" class="text-xs font-bold text-red-600 hover:underline">View All Pending →</a>
+        </div>
+        {% if pending_properties %}
+            <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+                <div class="divide-y divide-gray-100">
+                    {% for prop in pending_properties %}
+                        <div class="p-4 flex items-center justify-between">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-900">{{ prop.title }}</h4>
+                                <p class="text-xs text-gray-500">📍 {{ prop.locality.name }}, {{ prop.city.name }} — Owner: {{ prop.owner.username }}</p>
+                            </div>
+                            <a href="{% url 'moderation:pending-properties' %}" class="bg-gray-900 text-white px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-black transition">
+                                Review
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-8 text-center text-xs font-bold text-gray-400">
+                No pending property approvals right now.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

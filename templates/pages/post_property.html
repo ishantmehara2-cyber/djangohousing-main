@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Post Property | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+        <div class="space-y-1">
+            <span class="text-[10px] font-bold text-brand-primary uppercase">Seller Portal</span>
+            <h1 class="text-2xl font-black text-gray-900">Add Your Property Listing</h1>
+            <p class="text-xs text-gray-400 font-medium">Complete the form below to list your property as a Draft or Submit for Admin Approval.</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-3 rounded-xl text-xs font-bold border shadow-sm
+                    {% if message.tags == 'error' %} bg-red-50 text-red-700 border-red-200
+                    {% else %} bg-emerald-50 text-emerald-700 border-emerald-200 {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Step 1 & 2: Purpose & Type -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Listing Purpose *</label>
+                    <select name="listing_purpose" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        {% for key, val in purposes %}
+                            <option value="{{ key }}" {% if property.listing_purpose == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Property Type *</label>
+                    <select name="property_type" required class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        {% for pt in property_types %}
+                            <option value="{{ pt.id }}" {% if property.property_type_id == pt.id %}selected{% endif %}>{{ pt.name }} ({{ pt.get_category_display }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Property Title *</label>
+                <input type="text" name="title" value="{{ property.title }}" required placeholder="e.g. Luxury 3 BHK Apartment with Sea View" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+            </div>
+
+            <!-- Pricing & Financials -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sale Price (₹)</label>
+                    <input type="number" name="price" value="{{ property.price|floatformat:0 }}" placeholder="15000000" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Monthly Rent (₹)</label>
+                    <input type="number" name="rent" value="{{ property.rent|floatformat:0 }}" placeholder="45000" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Security Deposit (₹)</label>
+                    <input type="number" name="security_deposit" value="{{ property.security_deposit|floatformat:0 }}" placeholder="100000" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Maintenance (₹/mo)</label>
+                    <input type="number" name="maintenance_fee" value="{{ property.maintenance_fee|floatformat:0 }}" placeholder="5000" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+            </div>
+
+            <!-- Specifications -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">BHK</label>
+                    <input type="number" name="bhk" value="{{ property.bhk|default:3 }}" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Bathrooms</label>
+                    <input type="number" name="bathrooms" value="{{ property.bathrooms|default:2 }}" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Carpet Area (Sq.Ft.) *</label>
+                    <input type="number" name="carpet_area" value="{{ property.carpet_area|floatformat:0 }}" required class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Furnishing</label>
+                    <select name="furnishing" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        {% for key, val in furnishing_choices %}
+                            <option value="{{ key }}" {% if property.furnishing == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Location Hierarchy (State -> District -> Locality -> Sub-Locality) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">State / Union Territory *</label>
+                    <select id="state-select" name="state" required class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <option value="">Select State / UT</option>
+                        {% for state in states %}
+                            <option value="{{ state.id }}" {% if property.state_id == state.id %}selected{% endif %}>{{ state.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">District *</label>
+                    <select id="district-select" name="district" required class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <option value="">Select District</option>
+                        {% for dist in districts %}
+                            <option value="{{ dist.id }}" data-state="{{ dist.state_id }}" {% if property.district_id == dist.id %}selected{% endif %}>{{ dist.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Locality *</label>
+                    <select id="locality-select" name="locality" required class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <option value="">Select Locality</option>
+                        {% for loc in localities %}
+                            <option value="{{ loc.id }}" {% if property.locality_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sub-locality (Optional)</label>
+                    <select id="sub-locality-select" name="sub_locality" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <option value="">Select Sub-locality</option>
+                        {% for sub in sub_localities %}
+                            <option value="{{ sub.id }}" data-locality="{{ sub.locality_id }}" {% if property.sub_locality_id == sub.id %}selected{% endif %}>{{ sub.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const stateSelect = document.getElementById('state-select');
+                    const districtSelect = document.getElementById('district-select');
+                    const localitySelect = document.getElementById('locality-select');
+                    const subLocalitySelect = document.getElementById('sub-locality-select');
+
+                    stateSelect.addEventListener('change', function() {
+                        const stateId = this.value;
+                        districtSelect.innerHTML = '<option value="">Select District</option>';
+                        localitySelect.innerHTML = '<option value="">Select Locality</option>';
+                        subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
+                        if (!stateId) return;
+
+                        fetch(`/api/locations/districts/?state_id=${stateId}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                data.districts.forEach(d => {
+                                    const opt = document.createElement('option');
+                                    opt.value = d.id;
+                                    opt.textContent = d.name;
+                                    districtSelect.appendChild(opt);
+                                });
+                            });
+
+                        fetch(`/api/locations/localities/?state_id=${stateId}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                data.localities.forEach(l => {
+                                    const opt = document.createElement('option');
+                                    opt.value = l.id;
+                                    opt.textContent = l.name + (l.pincode ? ` - ${l.pincode}` : '');
+                                    localitySelect.appendChild(opt);
+                                });
+                            });
+                    });
+
+                    districtSelect.addEventListener('change', function() {
+                        const districtId = this.value;
+                        localitySelect.innerHTML = '<option value="">Select Locality</option>';
+                        subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
+                        if (!districtId) return;
+
+                        fetch(`/api/locations/localities/?district_id=${districtId}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                data.localities.forEach(l => {
+                                    const opt = document.createElement('option');
+                                    opt.value = l.id;
+                                    opt.textContent = l.name + (l.pincode ? ` - ${l.pincode}` : '');
+                                    localitySelect.appendChild(opt);
+                                });
+                            });
+                    });
+
+                    localitySelect.addEventListener('change', function() {
+                        const localityId = this.value;
+                        subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
+                        if (!localityId) return;
+
+                        fetch(`/api/locations/sub-localities/?locality_id=${localityId}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                data.sub_localities.forEach(s => {
+                                    const opt = document.createElement('option');
+                                    opt.value = s.id;
+                                    opt.textContent = s.name;
+                                    subLocalitySelect.appendChild(opt);
+                                });
+                            });
+                    });
+                });
+            </script>
+
+            <!-- Address & Pincode -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Detailed Address *</label>
+                    <input type="text" name="address" value="{{ property.address }}" required placeholder="e.g. Hill Road, Bandra West" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Pincode</label>
+                    <input type="text" name="pincode" value="{{ property.pincode }}" placeholder="400050" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Property Description *</label>
+                <textarea name="description" rows="4" required placeholder="Describe layout, amenities, neighborhood..." class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">{{ property.description }}</textarea>
+            </div>
+
+            <!-- Amenities Checkboxes -->
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Amenities & Features</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                    {% for am in amenities %}
+                        <label class="flex items-center space-x-2 text-xs font-bold text-gray-700 cursor-pointer">
+                            <input type="checkbox" name="amenities" value="{{ am.id }}" class="rounded text-brand-primary focus:ring-brand-primary">
+                            <span>{{ am.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Image Upload -->
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Property Images (Select Multiple)</label>
+                <input type="file" name="images" multiple class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none cursor-pointer">
+                <p class="text-[10px] text-gray-400 mt-1">Supported formats: JPG, PNG, WebP (Max size: 5MB per image).</p>
+            </div>
+
+            <!-- Actions (Save as Draft vs Submit for Approval) -->
+            <div class="flex items-center space-x-4 pt-4 border-t border-gray-100">
+                <button type="submit" name="action" value="draft" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3.5 rounded-xl font-bold text-xs transition">
+                    Save as Draft
+                </button>
+                <button type="submit" name="action" value="submit" class="flex-1 bg-brand-primary hover:bg-brand-hover text-white py-3.5 rounded-xl font-bold text-xs transition shadow-md">
+                    Submit for Admin Approval
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

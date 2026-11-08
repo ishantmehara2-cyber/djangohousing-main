@@ -1,0 +1,54 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}All Properties | Admin Panel{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div>
+        <h1 class="text-2xl font-black text-gray-900">All Platform Properties</h1>
+        <p class="text-xs text-gray-500 font-medium mt-1">Complete overview of all active, draft, pending, and rejected property listings.</p>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase">
+                    <th class="p-4">Property</th>
+                    <th class="p-4">Owner</th>
+                    <th class="p-4">Category</th>
+                    <th class="p-4">Purpose</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4">Price</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-xs font-semibold text-gray-800">
+                {% for prop in properties %}
+                    <tr>
+                        <td class="p-4">
+                            <a href="{% url 'properties:detail' prop.slug %}" target="_blank" class="font-black text-gray-900 hover:text-red-600 transition">
+                                {{ prop.title }}
+                            </a>
+                            <span class="block text-[10px] text-gray-400 font-medium">#PROP-{{ prop.id }} — {{ prop.city.name }}</span>
+                        </td>
+                        <td class="p-4">{{ prop.owner.username }}</td>
+                        <td class="p-4">{{ prop.property_type.name }}</td>
+                        <td class="p-4">{{ prop.get_listing_purpose_display }}</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase
+                                {% if prop.listing_state == 'ACTIVE' %} bg-emerald-100 text-emerald-800
+                                {% elif prop.listing_state == 'PENDING_APPROVAL' %} bg-amber-100 text-amber-800
+                                {% elif prop.listing_state == 'REJECTED' %} bg-red-100 text-red-800
+                                {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                                {{ prop.get_listing_state_display }}
+                            </span>
+                        </td>
+                        <td class="p-4 font-black">
+                            {% if prop.listing_purpose == 'RENT' %}₹ {{ prop.rent|floatformat:0 }} / mo{% else %}₹ {{ prop.price|floatformat:0 }}{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}User Dashboard | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="flex items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm">
+        <div>
+            <span class="text-[10px] font-bold text-brand-primary uppercase">Buyer / Tenant Dashboard</span>
+            <h1 class="text-2xl font-black text-gray-900">Welcome, {{ user.get_full_name|default:user.username }}</h1>
+            <p class="text-xs text-gray-500 font-medium">Manage your saved properties, inquiries, and housing preferences.</p>
+        </div>
+        <a href="{% url 'accounts:logout' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+            Logout
+        </a>
+    </div>
+
+    <!-- Favorites Section -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-black text-gray-900">Saved Properties (Favorites)</h2>
+        {% if favorites %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for fav in favorites %}
+                    <div class="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-3">
+                        <h3 class="font-bold text-sm text-gray-900">{{ fav.property.title }}</h3>
+                        <p class="text-xs text-gray-500">📍 {{ fav.property.locality.name }}, {{ fav.property.city.name }}</p>
+                        <p class="text-sm font-black text-gray-900">₹ {{ fav.property.price|floatformat:0 }}</p>
+                        <a href="{% url 'properties:detail' fav.property.slug %}" class="block w-full text-center bg-gray-900 text-white py-2 rounded-xl text-xs font-bold">
+                            View Property
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-8 text-center text-gray-400 text-xs font-bold">
+                No saved properties yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

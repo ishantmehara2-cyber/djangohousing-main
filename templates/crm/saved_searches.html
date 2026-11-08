@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Saved Searches & Alerts | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="flex items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm">
+        <div>
+            <h1 class="text-2xl font-black text-gray-900">Saved Searches & Search Alerts</h1>
+            <p class="text-xs text-gray-500 font-medium mt-1">Reopen your favorite search filter combinations and receive alerts when new properties match.</p>
+        </div>
+        <a href="{% url 'properties:search' %}" class="bg-brand-primary hover:bg-brand-hover text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+            + Save a New Search
+        </a>
+    </div>
+
+    {% if searches %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for s in searches %}
+                <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="bg-brand-50 text-brand-primary text-[10px] font-bold uppercase px-2.5 py-1 rounded">
+                            Saved Search
+                        </span>
+                        <span class="text-xs text-gray-400">{{ s.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <h3 class="font-black text-base text-gray-900">{{ s.name|default:"Custom Saved Search" }}</h3>
+                    <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100 font-mono text-[11px] text-gray-600 truncate">
+                        Filters: {{ s.search_criteria }}
+                    </div>
+                    <div class="flex items-center justify-between pt-2">
+                        <a href="{% url 'properties:search' %}?{% for k, v in s.search_criteria.items %}{{ k }}={{ v }}&{% endfor %}" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition">
+                            Run Saved Search →
+                        </a>
+                        <a href="{% url 'engagements:delete-saved-search' s.id %}" class="text-xs font-bold text-red-600 hover:underline">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white border border-gray-200 rounded-3xl p-16 text-center space-y-3 shadow-sm">
+            <div class="text-4xl">📂</div>
+            <h3 class="text-lg font-black text-gray-900">No Saved Searches Yet</h3>
+            <p class="text-xs text-gray-400">Apply filters on the search page and click 'Save Search' to receive instant matching notifications.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

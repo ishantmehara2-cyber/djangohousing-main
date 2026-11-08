@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}Checkout Promotion — {{ property.title }} | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-12 space-y-8">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+        <div>
+            <span class="text-[10px] font-black text-brand-primary uppercase">PROMOTION CHECKOUT</span>
+            <h1 class="text-2xl font-black text-gray-900 mt-1">Review Property Promotion Order</h1>
+            <p class="text-xs text-gray-400 font-medium">Verify your selected promotion and complete payment verification.</p>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-200 p-6 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                <span class="text-xs font-bold text-gray-500">Property:</span>
+                <span class="text-xs font-black text-gray-900">{{ property.title }}</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                <span class="text-xs font-bold text-gray-500">Promotion Package:</span>
+                <span class="text-xs font-black text-brand-primary">{{ promo_type }} (30 Days)</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                <span class="text-xs font-bold text-gray-500">Gateway Order Reference:</span>
+                <span class="text-xs font-mono font-bold text-gray-800">{{ transaction.razorpay_order_id }}</span>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <span class="text-sm font-black text-gray-900">Total Payable Amount:</span>
+                <span class="text-2xl font-black text-brand-primary">₹ {{ amount|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'billing:verify-promotion' %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="transaction_id" value="{{ transaction.id }}">
+            <input type="hidden" name="property_id" value="{{ property.id }}">
+            <input type="hidden" name="promotion_type" value="{{ promo_type }}">
+            <input type="hidden" name="razorpay_payment_id" value="pay_promo_verified_{{ transaction.id }}">
+
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'properties:my-properties' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 py-3.5 px-6 rounded-xl text-xs font-bold transition">
+                    Cancel
+                </a>
+                <button type="submit" class="flex-1 bg-brand-primary hover:bg-brand-hover text-white py-3.5 rounded-xl text-xs font-bold transition shadow-md">
+                    Verify & Activate Promotion (₹ {{ amount|floatformat:0 }})
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

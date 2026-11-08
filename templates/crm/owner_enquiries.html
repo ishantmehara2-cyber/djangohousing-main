@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}Owner Lead CRM | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-gray-900">Owner Lead & CRM Management</h1>
+            <p class="text-xs text-gray-500 font-medium mt-1">Manage prospective buyers and tenants for your properties.</p>
+        </div>
+        <a href="{% url 'properties:my-properties' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+            Back to My Properties
+        </a>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-black text-gray-900">Incoming Leads ({{ leads|length }})</h2>
+        {% if leads %}
+            <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+                <div class="divide-y divide-gray-100">
+                    {% for lead in leads %}
+                        <div class="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                            <div class="space-y-1.5">
+                                <span class="text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-brand-50 text-brand-primary">
+                                    {{ lead.get_status_display }}
+                                </span>
+                                <h3 class="font-black text-sm text-gray-900 mt-1">Property: {{ lead.property.title }}</h3>
+                                <p class="text-xs text-gray-700">Client: <b>{{ lead.lead_user.get_full_name|default:lead.lead_user.username }}</b> ({{ lead.lead_user.email }})</p>
+                                <p class="text-xs text-gray-500 italic">Notes: "{{ lead.notes|default:"No notes provided." }}"</p>
+                                <span class="text-[10px] text-gray-400 block pt-1">Received: {{ lead.created_at|date:"M d, Y H:i" }}</span>
+                            </div>
+
+                            <!-- Update Status Form -->
+                            <form method="POST" action="{% url 'engagements:update-lead-status' lead.id %}" class="flex items-center space-x-2">
+                                {% csrf_token %}
+                                <select name="status" class="bg-gray-50 border border-gray-200 p-2.5 rounded-xl text-xs font-bold text-gray-800 outline-none">
+                                    <option value="NEW" {% if lead.status == 'NEW' %}selected{% endif %}>New</option>
+                                    <option value="CONTACTED" {% if lead.status == 'CONTACTED' %}selected{% endif %}>Contacted</option>
+                                    <option value="IN_PROGRESS" {% if lead.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                                    <option value="INTERESTED" {% if lead.status == 'INTERESTED' %}selected{% endif %}>Interested</option>
+                                    <option value="VISIT_SCHEDULED" {% if lead.status == 'VISIT_SCHEDULED' %}selected{% endif %}>Visit Scheduled</option>
+                                    <option value="CONVERTED" {% if lead.status == 'CONVERTED' %}selected{% endif %}>Converted</option>
+                                    <option value="CLOSED" {% if lead.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                                </select>
+                                <button type="submit" class="bg-gray-900 hover:bg-black text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                                    Update Status
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-16 text-center space-y-3 shadow-sm">
+                <div class="text-4xl">📭</div>
+                <h3 class="text-lg font-black text-gray-900">No Leads Found</h3>
+                <p class="text-xs text-gray-400">When prospective buyers or tenants inquire about your properties, leads will appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

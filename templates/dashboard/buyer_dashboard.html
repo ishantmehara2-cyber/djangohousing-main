@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Buyer Dashboard | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Header Banner -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-[10px] font-black text-brand-primary uppercase tracking-wider bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">
+                    BUYER DASHBOARD
+                </span>
+            </div>
+            <h1 class="text-2xl font-black text-gray-900 mt-2">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+            <p class="text-xs text-gray-500 font-medium">Browse, save, and manage your property inquiries and site visits.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="/search/?listing_purpose=BUY" class="bg-brand-primary hover:bg-brand-hover text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+                🔍 Search Properties
+            </a>
+            <a href="{% url 'accounts:profile' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                My Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Saved Favorites</span>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ favorites|length }}</p>
+            </div>
+            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-xl font-bold">
+                ❤️
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Sent Inquiries</span>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ enquiries|length }}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-xl font-bold">
+                📩
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Scheduled Visits</span>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ visits|length }}</p>
+            </div>
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-xl font-bold">
+                📅
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Properties (Favorites) -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-black text-gray-900">Saved Properties (Favorites)</h2>
+            <a href="/search/" class="text-xs font-bold text-brand-primary hover:underline">Explore More →</a>
+        </div>
+        {% if favorites %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for fav in favorites %}
+                    <div class="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-brand-50 text-brand-primary border border-brand-100">
+                                {{ fav.property.get_listing_purpose_display }}
+                            </span>
+                            <span class="text-xs font-black text-gray-900">₹ {{ fav.property.price|floatformat:0 }}</span>
+                        </div>
+                        <h3 class="font-bold text-sm text-gray-900 line-clamp-1">{{ fav.property.title }}</h3>
+                        <p class="text-xs text-gray-500">📍 {{ fav.property.locality.name }}, {{ fav.property.city.name }}</p>
+                        <a href="{% url 'properties:detail' fav.property.slug %}" class="block w-full text-center bg-gray-900 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-black transition">
+                            View Property
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-10 text-center space-y-2">
+                <p class="text-xs font-bold text-gray-500">You haven't saved any properties yet.</p>
+                <a href="/search/" class="inline-block bg-brand-primary text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">
+                    Browse Buy Properties
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Enquiries -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-black text-gray-900">My Sent Inquiries</h2>
+        {% if enquiries %}
+            <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+                <div class="divide-y divide-gray-100">
+                    {% for enq in enquiries %}
+                        <div class="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-900">{{ enq.property.title }}</h4>
+                                <p class="text-xs text-gray-500 mt-0.5">Message: "{{ enq.message|truncatewords:15 }}"</p>
+                                <span class="text-[10px] text-gray-400 font-medium">Sent on {{ enq.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <a href="{% url 'properties:detail' enq.property.slug %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+                                View Property
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-8 text-center text-xs font-bold text-gray-400">
+                No inquiries sent yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

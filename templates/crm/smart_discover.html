@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}Smart Property Discovery Dashboard | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm gap-4">
+        <div>
+            <span class="text-[10px] font-black text-brand-primary uppercase tracking-wider bg-brand-50 px-2.5 py-1 rounded-full">
+                SMART PERSONALIZED DISCOVERY
+            </span>
+            <h1 class="text-2xl font-black text-gray-900 mt-2">Welcome to Your Personal Discovery Hub</h1>
+            <p class="text-xs text-gray-500 font-medium">Weighted recommendations, activity history, and new properties tailored for you.</p>
+        </div>
+        <a href="{% url 'engagements:preferences' %}" class="bg-brand-primary hover:bg-brand-hover text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+            Edit Preferences
+        </a>
+    </div>
+
+    <!-- Section A: Recommended For You -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-gray-900">Recommended For You</h2>
+            <span class="text-xs text-gray-400 font-medium">Scored based on your preference profile</span>
+        </div>
+        {% if recommendations %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for prop in recommendations %}
+                    <div class="space-y-2">
+                        {% include 'components/property_card.html' with prop=prop %}
+                        <div class="bg-amber-50 border border-amber-200 text-amber-900 p-2.5 rounded-xl text-[11px] font-bold">
+                            💡 {{ prop.recommendation_reason }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-8 text-center text-xs font-bold text-gray-400">
+                Configure your preferences to unlock personalized property scoring.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Section D: New in Preferred Location -->
+    {% if new_in_location %}
+        <div class="space-y-4">
+            <h2 class="text-xl font-black text-gray-900">New Listings in Your Preferred Location</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {% for prop in new_in_location %}
+                    {% include 'components/property_card.html' with prop=prop %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Section E: Featured Promotions -->
+    {% if featured_promotions %}
+        <div class="space-y-4">
+            <h2 class="text-xl font-black text-gray-900">Featured & Highlighted Properties</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {% for promo in featured_promotions %}
+                    {% include 'components/property_card.html' with prop=promo.property %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

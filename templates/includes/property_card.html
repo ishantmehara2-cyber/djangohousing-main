@@ -1,0 +1,48 @@
+<div class="property-card group">
+    <div>
+        <div class="property-card-media">
+            {% with first_media=prop.media.first %}
+                {% if first_media %}
+                    <img src="{{ first_media.file.url }}" alt="{{ prop.title }}" class="property-card-img" loading="lazy">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100">
+                        No Image Available
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <span class="absolute top-3 left-3 badge-purpose px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                {{ prop.get_listing_purpose_display }}
+            </span>
+            <span class="absolute top-3 right-3 badge-verified px-2 py-0.5 rounded text-[10px] font-extrabold uppercase">
+                {{ prop.get_verification_state_display }}
+            </span>
+        </div>
+
+        <div class="property-card-body">
+            <div class="flex items-baseline justify-between">
+                <span class="property-card-price">
+                    {% if prop.price %}₹ {{ prop.price|floatformat:0 }}{% else %}Price on Request{% endif %}
+                </span>
+                <span class="text-xs font-bold text-brand-primary bg-brand-light px-2 py-0.5 rounded">
+                    {{ prop.bhk }} BHK
+                </span>
+            </div>
+            <a href="{% url 'properties:detail' prop.slug %}" class="property-card-title line-clamp-1">
+                {{ prop.title }}
+            </a>
+            <p class="property-card-location line-clamp-1">
+                📍 {{ prop.locality.name }}
+            </p>
+            <div class="property-card-meta">
+                <span>📐 {{ prop.carpet_area|floatformat:0 }} {{ prop.get_area_unit_display }}</span>
+                <span>🛏️ {{ prop.get_furnishing_display }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="property-card-footer">
+        <a href="{% url 'properties:detail' prop.slug %}" class="btn-card-detail">
+            View Details & Contact
+        </a>
+    </div>
+</div>

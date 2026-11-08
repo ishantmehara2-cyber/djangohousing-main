@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}Pricing & Subscription Plans | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+    <!-- Header -->
+    <div class="text-center space-y-3 max-w-3xl mx-auto">
+        <span class="text-xs font-black text-brand-primary uppercase tracking-widest bg-brand-50 px-3 py-1.5 rounded-full border border-brand-100">
+            TRANSPARENT PLATFORM MONETIZATION
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">Choose the Right Plan for Your Property Portfolio</h1>
+        <p class="text-sm text-gray-500 font-medium">Unlock higher property listing allowances, featured promotions, and priority lead management.</p>
+    </div>
+
+    <!-- Active Subscription Banner if logged in -->
+    {% if active_sub %}
+        <div class="bg-emerald-50 border border-emerald-200 p-6 rounded-3xl text-emerald-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-4xl mx-auto shadow-sm">
+            <div>
+                <span class="text-[10px] font-black uppercase bg-emerald-200 text-emerald-900 px-2.5 py-1 rounded-full">
+                    ACTIVE SUBSCRIPTION
+                </span>
+                <h3 class="text-lg font-black mt-1">Current Plan: {{ active_sub.package.name }}</h3>
+                <p class="text-xs text-emerald-700 font-medium">Valid until {{ active_sub.end_date|date:"F d, Y" }} — Allowance: {{ active_sub.package.max_listings }} Active Listings</p>
+            </div>
+            <a href="{% url 'billing:billing-dashboard' %}" class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap">
+                Manage Billing
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Pricing Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {% for pkg in packages %}
+            <div class="bg-white border {% if active_sub and active_sub.package_id == pkg.id %}border-brand-primary ring-2 ring-brand-primary{% else %}border-gray-200{% endif %} rounded-3xl p-8 shadow-sm hover:shadow-lg transition flex flex-col justify-between space-y-6 relative">
+                {% if pkg.name == 'PRO' or pkg.name == 'Pro' %}
+                    <span class="absolute -top-3.5 right-6 bg-brand-primary text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                        MOST POPULAR
+                    </span>
+                {% endif %}
+
+                <div class="space-y-4">
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{{ pkg.get_target_role_display }} Plan</span>
+                        <h3 class="text-xl font-black text-gray-900 mt-1">{{ pkg.name }}</h3>
+                    </div>
+
+                    <div class="flex items-baseline space-x-1">
+                        <span class="text-4xl font-black text-gray-900">₹ {{ pkg.price|floatformat:0 }}</span>
+                        <span class="text-xs font-bold text-gray-400">/ {{ pkg.validity_days }} days</span>
+                    </div>
+
+                    <p class="text-xs text-gray-500 font-medium leading-relaxed">
+                        {{ pkg.description|default:"Includes verified property listings, lead management tools, and support." }}
+                    </p>
+
+                    <hr class="border-gray-100">
+
+                    <!-- Plan Features -->
+                    <ul class="space-y-2.5 text-xs font-bold text-gray-700">
+                        <li class="flex items-center space-x-2">
+                            <span class="text-emerald-500">✔</span>
+                            <span>Up to <b>{{ pkg.max_listings }} Active Property Listings</b></span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <span class="text-emerald-500">✔</span>
+                            <span>{{ pkg.featured_listings_count }} Featured Promotions Included</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <span class="text-emerald-500">✔</span>
+                            <span>In-App Lead CRM & Notifications</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <span class="text-emerald-500">✔</span>
+                            <span>24/7 Seller Support</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    {% if user.is_authenticated %}
+                        {% if active_sub and active_sub.package_id == pkg.id %}
+                            <button disabled class="w-full bg-emerald-100 text-emerald-800 py-3.5 rounded-xl font-bold text-xs cursor-default">
+                                Active Plan
+                            </button>
+                        {% else %}
+                            <a href="{% url 'billing:checkout' pkg.id %}" class="block w-full text-center bg-brand-primary hover:bg-brand-hover text-white py-3.5 rounded-xl font-bold text-xs transition shadow-md">
+                                Subscribe to {{ pkg.name }}
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}?next={% url 'billing:pricing' %}" class="block w-full text-center bg-gray-900 hover:bg-black text-white py-3.5 rounded-xl font-bold text-xs transition">
+                            Login to Select Plan
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-3 bg-white border border-gray-200 rounded-3xl p-12 text-center text-xs font-bold text-gray-400">
+                Subscription packages coming soon.
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

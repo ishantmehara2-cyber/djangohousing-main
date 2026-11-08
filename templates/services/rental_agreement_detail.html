@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rental Agreement Request {{ agreement.reference_number }} | Housing..{% endblock %}
+
+{% block content %}
+<section class="py-12 bg-gray-50 min-h-[70vh]">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+        <div class="bg-white p-6 sm:p-10 rounded-3xl border border-gray-200 shadow-lg space-y-6">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div>
+                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-3 py-1 rounded-full uppercase">
+                        Request Confirmed
+                    </span>
+                    <h1 class="text-2xl font-black text-gray-900 mt-2">Rental Agreement Request</h1>
+                    <p class="text-xs text-gray-500">Reference #: <strong class="text-gray-900">{{ agreement.reference_number }}</strong></p>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-bold text-gray-400 block">Current Status</span>
+                    <span class="inline-block bg-brand-primary text-white text-xs font-bold px-3 py-1 rounded-xl mt-1">
+                        {{ agreement.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-gray-50 p-4 rounded-2xl">
+                <div>
+                    <span class="text-gray-500 block">Applicant Name:</span>
+                    <span class="font-bold text-gray-900 text-sm">{{ agreement.full_name }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500 block">Contact Info:</span>
+                    <span class="font-semibold text-gray-800">{{ agreement.phone }} | {{ agreement.email }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500 block">Agreement Type:</span>
+                    <span class="font-bold text-gray-900">{{ agreement.get_agreement_type_display }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500 block">Estimated Charge:</span>
+                    <span class="font-bold text-emerald-600 text-sm">₹ {{ agreement.estimated_charge }}</span>
+                </div>
+            </div>
+
+            <div class="space-y-2 text-xs text-gray-700">
+                <p><strong>Property Address:</strong> {{ agreement.property_address }}, {{ agreement.city_name }}</p>
+                <p><strong>Rent Details:</strong> ₹ {{ agreement.monthly_rent }} / month | Deposit: ₹ {{ agreement.security_deposit }}</p>
+                <p><strong>Tenancy & Lock-in:</strong> {{ agreement.tenancy_period_months }} Months Tenancy ({{ agreement.lock_in_period_months }} Month Lock-in)</p>
+                {% if agreement.notes %}
+                <p><strong>Special Notes:</strong> {{ agreement.notes }}</p>
+                {% endif %}
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 p-4 rounded-2xl text-xs text-blue-900 space-y-1">
+                <p class="font-bold">Next Steps:</p>
+                <p>1. Our legal verification executive will call you at <strong>{{ agreement.phone }}</strong> to verify terms.</p>
+                <p>2. A draft agreement preview will be emailed to <strong>{{ agreement.email }}</strong> for your approval before e-stamping.</p>
+            </div>
+
+            <div class="pt-2 flex gap-4">
+                <a href="{% url 'services:rental-agreement' %}" class="bg-gray-900 hover:bg-black text-white text-xs font-bold px-6 py-3 rounded-xl transition">
+                    ← Submit Another Request
+                </a>
+                <a href="{% url 'home' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold px-6 py-3 rounded-xl transition">
+                    Return to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

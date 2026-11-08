@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Agent Dashboard | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-[10px] font-black text-brand-primary uppercase tracking-wider bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">
+                    REAL ESTATE AGENT & BROKER DASHBOARD
+                </span>
+            </div>
+            <h1 class="text-2xl font-black text-gray-900 mt-2">Welcome, {{ user.first_name|default:user.username }}!</h1>
+            <p class="text-xs text-gray-500 font-medium">Manage assigned listings, convert client leads, and schedule visits.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="/post-property/" class="bg-brand-primary hover:bg-brand-hover text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+                + Post New Listing
+            </a>
+            <a href="{% url 'accounts:profile' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                My Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Assigned Listings</span>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ properties|length }}</p>
+            </div>
+            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+                🏢
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Client Leads</span>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ leads|length }}</p>
+            </div>
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+                👥
+            </div>
+        </div>
+        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Scheduled Visits</span>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ visits|length }}</p>
+            </div>
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+                📅
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Listings -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-black text-gray-900">Assigned Property Listings</h2>
+            <a href="/post-property/" class="text-xs font-bold text-brand-primary hover:underline">+ Post Listing</a>
+        </div>
+        {% if properties %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for prop in properties %}
+                    <div class="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-100 text-gray-800">
+                                {{ prop.get_listing_state_display }}
+                            </span>
+                            <span class="text-xs font-bold text-brand-primary">₹ {{ prop.price|floatformat:0 }}</span>
+                        </div>
+                        <h3 class="font-bold text-sm text-gray-900 line-clamp-1">{{ prop.title }}</h3>
+                        <p class="text-xs text-gray-500">📍 {{ prop.locality.name }}, {{ prop.city.name }}</p>
+                        <div class="flex items-center space-x-2 pt-2">
+                            <a href="{% url 'properties:detail' prop.slug %}" class="flex-1 text-center bg-gray-900 text-white py-2 rounded-xl text-xs font-bold hover:bg-black transition">
+                                View
+                            </a>
+                            <a href="{% url 'properties:edit' prop.slug %}" class="flex-1 text-center bg-gray-100 text-gray-800 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition">
+                                Edit
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-12 text-center space-y-3">
+                <p class="text-base font-bold text-gray-700">No properties assigned to your account yet.</p>
+                <a href="/post-property/" class="inline-block bg-brand-primary text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm">
+                    Post Property Listing
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Client Leads & Status Updates -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-black text-gray-900">Assigned Client Leads</h2>
+        {% if leads %}
+            <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+                <div class="divide-y divide-gray-100">
+                    {% for lead in leads %}
+                        <div class="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-brand-50 text-brand-primary">
+                                    {{ lead.get_status_display }}
+                                </span>
+                                <h4 class="font-bold text-sm text-gray-900 mt-1">Property: {{ lead.property.title }}</h4>
+                                <p class="text-xs text-gray-600">Client: <b>{{ lead.lead_user.get_full_name|default:lead.lead_user.username }}</b> ({{ lead.lead_user.email }}, {{ lead.lead_user.phone|default:"No phone" }})</p>
+                                <p class="text-xs text-gray-500 italic">Notes: "{{ lead.notes }}"</p>
+                            </div>
+                            <form method="POST" action="{% url 'accounts:update_lead_status' lead.id %}" class="flex items-center space-x-2">
+                                {% csrf_token %}
+                                <select name="status" class="bg-gray-50 border border-gray-200 p-2 rounded-xl text-xs font-bold text-gray-800 outline-none">
+                                    <option value="NEW" {% if lead.status == 'NEW' %}selected="selected"{% endif %}>New</option>
+                                    <option value="CONTACTED" {% if lead.status == 'CONTACTED' %}selected="selected"{% endif %}>Contacted</option>
+                                    <option value="MEETING_SCHEDULED" {% if lead.status == 'MEETING_SCHEDULED' %}selected="selected"{% endif %}>Meeting Scheduled</option>
+                                    <option value="CONVERTED" {% if lead.status == 'CONVERTED' %}selected="selected"{% endif %}>Converted</option>
+                                    <option value="LOST" {% if lead.status == 'LOST' %}selected="selected"{% endif %}>Lost</option>
+                                </select>
+                                <button type="submit" class="bg-gray-900 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-black transition">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-white border border-gray-200 rounded-3xl p-8 text-center text-xs font-bold text-gray-400">
+                No client leads assigned yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

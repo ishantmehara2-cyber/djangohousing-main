@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Property Preferences Profile | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+        <div>
+            <span class="text-[10px] font-black text-brand-primary uppercase">PERSONALIZED DISCOVERY ENGINE</span>
+            <h1 class="text-2xl font-black text-gray-900 mt-1">Configure Your Property Preferences</h1>
+            <p class="text-xs text-gray-400 font-medium">Set your preferred locations, budget, and configurations to receive personalized recommendations.</p>
+        </div>
+
+        <form method="POST" action="" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Preferred Purpose</label>
+                    <select name="purpose" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        {% for key, val in purposes %}
+                            <option value="{{ key }}" {% if preference.purpose == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Preferred City</label>
+                    <select name="city" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <option value="">Any City</option>
+                        {% for c in cities %}
+                            <option value="{{ c.id }}" {% if preference.city_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Minimum Budget (₹)</label>
+                    <input type="number" name="min_price" value="{{ preference.min_price|floatformat:0 }}" placeholder="e.g. 5000000" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Maximum Budget (₹)</label>
+                    <input type="number" name="max_price" value="{{ preference.max_price|floatformat:0 }}" placeholder="e.g. 15000000" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Min BHK</label>
+                    <input type="number" name="min_bhk" value="{{ preference.min_bhk|default:1 }}" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Max BHK</label>
+                    <input type="number" name="max_bhk" value="{{ preference.max_bhk|default:4 }}" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Furnishing</label>
+                    <select name="furnishing" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
+                        <option value="">Any Furnishing</option>
+                        {% for key, val in furnishing_choices %}
+                            <option value="{{ key }}" {% if preference.furnishing == key %}selected{% endif %}>{{ val }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="bg-brand-primary hover:bg-brand-hover text-white px-8 py-3.5 rounded-xl font-bold text-xs transition shadow-md w-full">
+                Save Property Preferences Profile
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

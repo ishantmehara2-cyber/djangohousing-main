@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load property_tags %}
+
+{% block title %}Checkout — {{ package.name }} Plan | Housing..{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-12 space-y-8">
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+        <div>
+            <span class="text-[10px] font-black text-brand-primary uppercase">SECURE PAYMENT CHECKOUT</span>
+            <h1 class="text-2xl font-black text-gray-900 mt-1">Review Your Subscription Order</h1>
+            <p class="text-xs text-gray-400 font-medium">Verify your selected package and complete payment verification.</p>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-200 p-6 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                <span class="text-xs font-bold text-gray-500">Selected Plan:</span>
+                <span class="text-sm font-black text-gray-900">{{ package.name }} Plan</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                <span class="text-xs font-bold text-gray-500">Listing Allowance:</span>
+                <span class="text-xs font-black text-gray-800">{{ package.max_listings }} Active Property Listings</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                <span class="text-xs font-bold text-gray-500">Validity Period:</span>
+                <span class="text-xs font-black text-gray-800">{{ package.validity_days }} Days</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                <span class="text-xs font-bold text-gray-500">Gateway Order Reference:</span>
+                <span class="text-xs font-mono font-bold text-brand-primary">{{ transaction.razorpay_order_id }}</span>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <span class="text-sm font-black text-gray-900">Total Payable Amount:</span>
+                <span class="text-2xl font-black text-brand-primary">₹ {{ package.price|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <!-- Verified Payment Verification Submission -->
+        <form method="POST" action="{% url 'billing:verify-payment' %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="transaction_id" value="{{ transaction.id }}">
+            <input type="hidden" name="razorpay_payment_id" value="pay_rzp_verified_{{ transaction.id }}">
+
+            <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-amber-900 text-xs font-bold space-y-1">
+                <span>🛡️ Payment Verification Integration</span>
+                <p class="text-[11px] font-medium text-amber-800">Razorpay / Payment Gateway Sandbox Order generated. Click below to verify and activate your subscription.</p>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'billing:pricing' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 py-3.5 px-6 rounded-xl text-xs font-bold transition">
+                    Cancel
+                </a>
+                <button type="submit" class="flex-1 bg-brand-primary hover:bg-brand-hover text-white py-3.5 rounded-xl text-xs font-bold transition shadow-md">
+                    Complete Payment & Activate Subscription (₹ {{ package.price|floatformat:0 }})
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

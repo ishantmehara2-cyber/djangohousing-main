@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }} | Housing..{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-12 space-y-8">
+    <div class="border-b border-gray-200 pb-6 flex items-center justify-between">
+        <div>
+            <span class="text-xs font-black uppercase text-brand-primary tracking-wider">{{ project.developer.company_name }}</span>
+            <h1 class="text-3xl font-black text-gray-900 mt-1">{{ project.name }}</h1>
+            <p class="text-xs text-gray-500 font-bold mt-1">📍 {{ project.locality.name }}, {{ project.city.name }}</p>
+        </div>
+        <a href="{% url 'core:projects-list' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold px-4 py-2.5 rounded-xl transition">← All Projects</a>
+    </div>
+
+    <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+        <div>
+            <h3 class="text-base font-black text-gray-900 mb-2">About the Project</h3>
+            <p class="text-sm text-gray-700 leading-relaxed">{{ project.description|default:"No description provided." }}</p>
+        </div>
+        {% if project.rera_id %}
+        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center space-x-3">
+            <span class="text-emerald-700 font-bold text-sm">✔ RERA Registered:</span>
+            <span class="text-emerald-900 font-mono font-bold text-sm">{{ project.rera_id }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

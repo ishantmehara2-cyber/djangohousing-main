@@ -1,0 +1,98 @@
+{% load property_tags %}
+<div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
+    <div>
+        <!-- Image & Badges -->
+        <div class="h-52 bg-gray-100 relative overflow-hidden">
+            {% with first_media=prop.media.first media_count=prop.media.count %}
+                {% if first_media %}
+                    <img src="{{ first_media.file.url }}" alt="{{ prop.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                {% else %}
+                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50 space-y-1">
+                        <span class="text-2xl">🏠</span>
+                        <span class="text-[11px] font-bold">Housing.. Verified</span>
+                    </div>
+                {% endif %}
+
+                <!-- Purpose Badge -->
+                <span class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider">
+                    {{ prop.get_listing_purpose_display }}
+                </span>
+
+                <!-- Media count badge if multiple -->
+                {% if media_count > 1 %}
+                    <span class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">
+                        📷 {{ media_count }} Photos
+                    </span>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Favorite Button -->
+            <form action="{% url 'engagements:toggle-favorite' prop.slug %}" method="POST" class="absolute top-3 right-3">
+                {% csrf_token %}
+                <button type="submit" title="Save Property" class="w-9 h-9 bg-white/90 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center shadow-md transition text-red-500 text-sm">
+                    {% if user.is_authenticated and prop.id in favorite_property_ids %}
+                        ❤️
+                    {% else %}
+                        🤍
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+
+        <!-- Property Info -->
+        <div class="p-5 space-y-3">
+            <div class="flex items-baseline justify-between">
+                <span class="text-xl font-black text-gray-900">
+                    {% if prop.listing_purpose == 'RENT' %}
+                        {{ prop.rent|indian_rent }}
+                    {% else %}
+                        {{ prop.price|indian_currency }}
+                    {% endif %}
+                </span>
+                <span class="text-[11px] font-extrabold text-brand-primary bg-brand-50 px-2.5 py-1 rounded-lg uppercase">
+                    {{ prop.property_type.name }}
+                </span>
+            </div>
+
+            <h3 class="font-black text-sm text-gray-900 line-clamp-1 group-hover:text-brand-primary transition">
+                {{ prop.title }}
+            </h3>
+
+            <p class="text-xs text-gray-500 font-medium flex items-center space-x-1">
+                <span>📍</span>
+                <span class="line-clamp-1">{{ prop.locality.name }}</span>
+            </p>
+
+            <!-- Key Specs Grid -->
+            <div class="grid grid-cols-3 gap-2 py-2 border-t border-b border-gray-100 text-center">
+                <div>
+                    <span class="block text-[9px] font-bold text-gray-400 uppercase">Configuration</span>
+                    <span class="text-xs font-black text-gray-800">
+                        {% if prop.bhk %}{{ prop.bhk }} BHK{% else %}Land / Plot{% endif %}
+                    </span>
+                </div>
+                <div>
+                    <span class="block text-[9px] font-bold text-gray-400 uppercase">Carpet Area</span>
+                    <span class="text-xs font-black text-gray-800">{{ prop.carpet_area|floatformat:0 }} {{ prop.get_area_unit_display }}</span>
+                </div>
+                <div>
+                    <span class="block text-[9px] font-bold text-gray-400 uppercase">Furnishing</span>
+                    <span class="text-xs font-black text-gray-800 truncate block">{{ prop.get_furnishing_display|default:"Unfurnished" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Action -->
+    <div class="p-5 pt-0 flex items-center space-x-3">
+        <div class="flex-grow">
+            <span class="block text-[9px] font-bold text-gray-400 uppercase">Listed By</span>
+            <span class="text-[11px] font-bold text-gray-700 truncate block">
+                {{ prop.owner.get_full_name|default:prop.owner.username }} ({{ prop.owner.get_role_display|truncatechars:10 }})
+            </span>
+        </div>
+        <a href="{% url 'properties:detail' prop.slug %}" class="bg-gray-900 hover:bg-brand-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap">
+            View Details
+        </a>
+    </div>
+</div>
