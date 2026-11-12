@@ -1,3 +1,5 @@
+import os
+import uuid
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -5,11 +7,19 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
+from django.conf import settings
 
-from apps.accounts.models import RoleChoices, UserStatusChoices
+from apps.accounts.models import (
+    RoleChoices,
+    UserStatusChoices,
+    PartnerApprovalStatusChoices,
+    PartnerDocumentTypeChoices,
+    PartnerDocument
+)
+from apps.core.validators import MAX_UPLOAD_SIZE_BYTES, validate_file_size_5mb, validate_document_file
 from apps.accounts.forms import (
     UserRegistrationForm,
     UserLoginForm,
@@ -47,7 +57,7 @@ def get_dashboard_url_for_user(user):
     """
     if user.is_admin_role or user.is_staff or user.is_superuser:
         return reverse('accounts:admin_dashboard')
-    elif user.role in [RoleChoices.AGENT, RoleChoices.DEVELOPER]:
+    elif user.role in [RoleChoices.AGENT, RoleChoices.DEVELOPER, getattr(RoleChoices, 'PARTNER', 'AGENT')]:
         return reverse('accounts:agent_dashboard')
     elif user.role == RoleChoices.OWNER:
         return reverse('accounts:owner_dashboard')
@@ -72,7 +82,7 @@ def mask_email(email):
 @rate_limit(max_attempts=10, window_seconds=60)
 def register_view(request):
     """
-    Handles new user registration with mandatory OTP verification.
+    Handles new user registration for Customers and Real Estate Partners with mandatory OTP verification.
     """
     if request.user.is_authenticated:
         return redirect('accounts:dashboard')
@@ -86,6 +96,59 @@ def register_view(request):
                 messages.error(request, "An account with this email address already exists. Please login instead.")
                 return render(request, 'auth/register.html', {'form': form})
 
+            is_partner = cd['role'] in [RoleChoices.PARTNER, RoleChoices.AGENT, RoleChoices.OWNER, RoleChoices.DEVELOPER]
+            temp_docs = []
+
+            if is_partner:
+                files_to_process = []
+                for field_name in request.FILES:
+                    files = request.FILES.getlist(field_name)
+                    cat = request.POST.get(f"{field_name}_category") or request.POST.get("doc_category")
+                    if not cat:
+                        if 'gumasta' in field_name.lower():
+                            cat = PartnerDocumentTypeChoices.GUMASTA
+                        elif 'msme' in field_name.lower():
+                            cat = PartnerDocumentTypeChoices.MSME
+                        elif 'udyam' in field_name.lower():
+                            cat = PartnerDocumentTypeChoices.UDYAM
+                        elif 'gst' in field_name.lower():
+                            cat = PartnerDocumentTypeChoices.GST
+                        else:
+                            cat = PartnerDocumentTypeChoices.GUMASTA
+                    for f in files:
+                        files_to_process.append((cat, f))
+
+                if not files_to_process:
+                    messages.error(request, "Real Estate Partner registration requires at least one government or business registration document (Gumasta, MSME, Udyam, or GST).")
+                    return render(request, 'auth/register.html', {'form': form})
+
+                temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_partner_docs')
+                os.makedirs(temp_dir, exist_ok=True)
+
+                for doc_cat, file_obj in files_to_process:
+                    if file_obj.size > MAX_UPLOAD_SIZE_BYTES:
+                        size_mb = file_obj.size / (1024 * 1024)
+                        messages.error(request, f"File '{file_obj.name}' exceeds maximum allowed limit of 5 MB per file. (Size: {size_mb:.2f} MB).")
+                        return render(request, 'auth/register.html', {'form': form})
+
+                    ext = os.path.splitext(file_obj.name)[1].lower()
+                    if ext not in ['.pdf', '.jpg', '.jpeg', '.png', '.webp']:
+                        messages.error(request, f"File '{file_obj.name}' has an unsupported file format '{ext}'. Allowed formats: PDF, JPG, JPEG, PNG, WEBP.")
+                        return render(request, 'auth/register.html', {'form': form})
+
+                    unique_name = f"{uuid.uuid4().hex}{ext}"
+                    temp_file_path = os.path.join(temp_dir, unique_name)
+                    with open(temp_file_path, 'wb+') as destination:
+                        for chunk in file_obj.chunks():
+                            destination.write(chunk)
+
+                    temp_docs.append({
+                        'document_type': doc_cat,
+                        'temp_filename': unique_name,
+                        'original_filename': file_obj.name,
+                        'file_size': file_obj.size,
+                    })
+
             request.session['pending_registration'] = {
                 'first_name': cd['first_name'],
                 'last_name': cd['last_name'],
@@ -93,6 +156,14 @@ def register_view(request):
                 'phone': cd['phone'],
                 'role': cd['role'],
                 'password': cd['password'],
+                'agency_name': cd.get('agency_name', ''),
+                'business_address': cd.get('business_address', ''),
+                'business_state': cd.get('business_state', ''),
+                'business_city': cd.get('business_city', ''),
+                'business_locality': cd.get('business_locality', ''),
+                'business_pincode': cd.get('business_pincode', ''),
+                'declaration_accepted': cd.get('declaration_accepted', False),
+                'temp_documents': temp_docs,
             }
 
             try:
@@ -143,7 +214,9 @@ def verify_otp_view(request):
         else:
             is_valid, msg = otp_obj.verify(user_otp, expected_purpose=OTPPurposeChoices.REGISTER)
             if is_valid:
-                # Create and activate user
+                is_partner = pending_data['role'] in [RoleChoices.PARTNER, RoleChoices.AGENT, RoleChoices.OWNER, RoleChoices.DEVELOPER]
+                approval_status = PartnerApprovalStatusChoices.PENDING if is_partner else PartnerApprovalStatusChoices.APPROVED
+
                 user = User.objects.create_user(
                     username=email,
                     email=email,
@@ -152,14 +225,48 @@ def verify_otp_view(request):
                     phone=pending_data['phone'],
                     password=pending_data['password'],
                     role=pending_data['role'],
+                    agency_name=pending_data.get('agency_name', ''),
+                    business_address=pending_data.get('business_address', ''),
+                    business_state=pending_data.get('business_state', ''),
+                    business_city=pending_data.get('business_city', ''),
+                    business_locality=pending_data.get('business_locality', ''),
+                    business_pincode=pending_data.get('business_pincode', ''),
+                    partner_approval_status=approval_status,
+                    declaration_accepted=pending_data.get('declaration_accepted', False),
+                    declaration_accepted_at=timezone.now() if pending_data.get('declaration_accepted') else None,
+                    declaration_version='1.0',
                     email_verified=True,
                     phone_verified=True,
                     is_active=True,
                     status=UserStatusChoices.ACTIVE
                 )
+
+                target_dir = os.path.join(settings.MEDIA_ROOT, 'partner_docs')
+                os.makedirs(target_dir, exist_ok=True)
+                for doc in pending_data.get('temp_documents', []):
+                    temp_path = os.path.join(settings.MEDIA_ROOT, 'temp_partner_docs', doc['temp_filename'])
+                    if os.path.exists(temp_path):
+                        dest_filename = f"partner_{user.id}_{doc['temp_filename']}"
+                        dest_path = os.path.join(target_dir, dest_filename)
+                        os.rename(temp_path, dest_path)
+                        rel_path = f"partner_docs/{dest_filename}"
+                        PartnerDocument.objects.create(
+                            user=user,
+                            document_type=doc.get('document_type', PartnerDocumentTypeChoices.GUMASTA),
+                            file=rel_path,
+                            original_filename=doc.get('original_filename', dest_filename),
+                            file_size=doc.get('file_size', 0),
+                            verification_status=PartnerApprovalStatusChoices.PENDING
+                        )
+
                 login(request, user)
-                del request.session['pending_registration']
-                messages.success(request, f"Welcome to Housing, {user.first_name}! Your email has been verified successfully.")
+                if 'pending_registration' in request.session:
+                    del request.session['pending_registration']
+
+                if is_partner:
+                    messages.success(request, f"Welcome to Housing, {user.first_name}! Your Real Estate Partner registration is submitted and pending admin verification.")
+                else:
+                    messages.success(request, f"Welcome to Housing, {user.first_name}! Your customer account has been created successfully.")
                 return redirect(get_dashboard_url_for_user(user))
             else:
                 messages.error(request, msg)
@@ -631,7 +738,7 @@ def owner_dashboard_view(request):
 
 
 @login_required
-@role_required(RoleChoices.AGENT, RoleChoices.DEVELOPER)
+@role_required(RoleChoices.PARTNER, RoleChoices.AGENT, RoleChoices.DEVELOPER, RoleChoices.OWNER)
 def agent_dashboard_view(request):
     user = request.user
     properties = Property.objects.filter(posted_by_user=user).select_related('city', 'locality')
@@ -651,11 +758,21 @@ def agent_dashboard_view(request):
 @login_required
 @admin_required
 def admin_dashboard_view(request):
+    from apps.services.models import LoanInquiryLead
+
     total_users = User.objects.count()
     total_properties = Property.objects.count()
     active_properties = Property.objects.filter(listing_state='ACTIVE').count()
     pending_properties = Property.objects.filter(listing_state='PENDING_VERIFICATION').count()
     total_enquiries = Enquiry.objects.count()
+
+    # Loan Inquiry Lead Summaries (MODULE 9)
+    total_loan_leads = LoanInquiryLead.objects.filter(is_deleted=False).count()
+    new_loan_leads = LoanInquiryLead.objects.filter(is_deleted=False, status='NEW').count()
+    pending_loan_leads = LoanInquiryLead.objects.filter(is_deleted=False, status='CONTACT_PENDING').count()
+    eval_loan_leads = LoanInquiryLead.objects.filter(is_deleted=False, status='UNDER_BANK_EVALUATION').count()
+    approved_loan_leads = LoanInquiryLead.objects.filter(is_deleted=False, status='LOAN_APPROVED').count()
+    rejected_loan_leads = LoanInquiryLead.objects.filter(is_deleted=False, status='LOAN_REJECTED').count()
 
     recent_users = User.objects.order_by('-date_joined')[:10]
     recent_properties = Property.objects.order_by('-created_at')[:10]
@@ -666,6 +783,12 @@ def admin_dashboard_view(request):
         'active_properties': active_properties,
         'pending_properties': pending_properties,
         'total_enquiries': total_enquiries,
+        'total_loan_leads': total_loan_leads,
+        'new_loan_leads': new_loan_leads,
+        'pending_loan_leads': pending_loan_leads,
+        'eval_loan_leads': eval_loan_leads,
+        'approved_loan_leads': approved_loan_leads,
+        'rejected_loan_leads': rejected_loan_leads,
         'recent_users': recent_users,
         'recent_properties': recent_properties,
     }
@@ -710,3 +833,200 @@ def update_lead_status_view(request, lead_id):
             messages.success(request, f"Lead status updated to {lead.get_status_display()}.")
 
     return redirect('accounts:dashboard')
+
+
+@login_required
+def partner_dashboard_view(request):
+    """
+    Real Estate Partner Dashboard:
+    Displays verification status, business details, uploaded documents & statuses,
+    property stats (total, active, pending approval, rejected), and Add Property action.
+    """
+    user = request.user
+    if not user.is_real_estate_partner and not user.is_admin_role:
+        messages.error(request, "This dashboard is reserved for Real Estate Partners.")
+        return redirect('accounts:dashboard')
+
+    properties = Property.objects.filter(posted_by_user=user).select_related('city', 'locality', 'property_type', 'thumbnail_media')
+    total_properties = properties.count()
+    active_properties = properties.filter(listing_state='ACTIVE').count()
+    pending_properties = properties.filter(listing_state='PENDING_APPROVAL').count()
+    rejected_properties = properties.filter(listing_state='REJECTED').count()
+    documents = user.partner_documents.all()
+
+    can_post, posting_msg = can_post_property(user)
+
+    context = {
+        'user': user,
+        'properties': properties,
+        'total_properties': total_properties,
+        'active_properties': active_properties,
+        'pending_properties': pending_properties,
+        'rejected_properties': rejected_properties,
+        'documents': documents,
+        'can_post_property': can_post,
+        'posting_msg': posting_msg,
+        'doc_types': PartnerDocumentTypeChoices.choices,
+    }
+    return render(request, 'dashboard/agent_dashboard.html', context)
+
+
+@login_required
+@require_POST
+def partner_upload_document_view(request):
+    """
+    Allows Real Estate Partners to upload additional or replacement verification documents.
+    Enforces global 5 MB upload limit.
+    """
+    user = request.user
+    if not user.is_real_estate_partner:
+        messages.error(request, "Access denied.")
+        return redirect('accounts:dashboard')
+
+    doc_file = request.FILES.get('document_file')
+    doc_type = request.POST.get('document_type', PartnerDocumentTypeChoices.GUMASTA)
+
+    if not doc_file:
+        messages.error(request, "Please select a document file to upload.")
+        return redirect('accounts:partner_dashboard')
+
+    if doc_file.size > MAX_UPLOAD_SIZE_BYTES:
+        size_mb = doc_file.size / (1024 * 1024)
+        messages.error(request, f"Maximum allowed file size is 5 MB per file. Uploaded file is {size_mb:.2f} MB.")
+        return redirect('accounts:partner_dashboard')
+
+    ext = os.path.splitext(doc_file.name)[1].lower()
+    if ext not in ['.pdf', '.jpg', '.jpeg', '.png', '.webp']:
+        messages.error(request, f"Unsupported document format '{ext}'. Allowed formats: PDF, JPG, JPEG, PNG, WEBP.")
+        return redirect('accounts:partner_dashboard')
+
+    PartnerDocument.objects.create(
+        user=user,
+        document_type=doc_type,
+        file=doc_file,
+        original_filename=doc_file.name,
+        file_size=doc_file.size,
+        verification_status=PartnerApprovalStatusChoices.PENDING
+    )
+
+    if user.partner_approval_status in [PartnerApprovalStatusChoices.ADDITIONAL_DOCS_REQUIRED, PartnerApprovalStatusChoices.REJECTED]:
+        user.partner_approval_status = PartnerApprovalStatusChoices.UNDER_VERIFICATION
+        user.save(update_fields=['partner_approval_status'])
+
+    messages.success(request, f"Document '{doc_file.name}' uploaded successfully. Status updated to Pending Verification.")
+    return redirect('accounts:partner_dashboard')
+
+
+@login_required
+@admin_required
+def admin_partner_applications_view(request):
+    """
+    Admin portal view to review, filter, and manage Real Estate Partner verification applications.
+    """
+    from django.db import models
+    status_filter = request.GET.get('status', '').strip()
+    query = request.GET.get('q', '').strip()
+
+    partners = User.objects.filter(role__in=[RoleChoices.PARTNER, RoleChoices.AGENT, RoleChoices.DEVELOPER, RoleChoices.OWNER])
+
+    if status_filter:
+        partners = partners.filter(partner_approval_status=status_filter)
+    if query:
+        partners = partners.filter(
+            models.Q(first_name__icontains=query) |
+            models.Q(last_name__icontains=query) |
+            models.Q(email__icontains=query) |
+            models.Q(phone__icontains=query) |
+            models.Q(agency_name__icontains=query)
+        )
+
+    partners = partners.order_by('-date_joined')
+
+    context = {
+        'partners': partners,
+        'status_filter': status_filter,
+        'query': query,
+        'status_choices': PartnerApprovalStatusChoices.choices,
+    }
+    return render(request, 'admin_panel/partner_applications.html', context)
+
+
+@login_required
+@admin_required
+def admin_partner_detail_view(request, user_id):
+    """
+    Admin detail view for a specific Real Estate Partner application:
+    Displays business info, submitted documents, declaration status, and provides approval/rejection actions.
+    """
+    partner_user = get_object_or_404(User, id=user_id)
+    documents = partner_user.partner_documents.all()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        new_status = request.POST.get('status')
+        notes = request.POST.get('verification_notes', '').strip()
+        rejection_reason = request.POST.get('partner_rejection_reason', '').strip()
+
+        if action == 'approve' or new_status == PartnerApprovalStatusChoices.APPROVED:
+            partner_user.partner_approval_status = PartnerApprovalStatusChoices.APPROVED
+            partner_user.partner_rejection_reason = ''
+            messages.success(request, f"Real Estate Partner '{partner_user.get_full_name() or partner_user.email}' has been APPROVED! Property posting privileges are now active.")
+        elif action == 'reject' or new_status == PartnerApprovalStatusChoices.REJECTED:
+            partner_user.partner_approval_status = PartnerApprovalStatusChoices.REJECTED
+            partner_user.partner_rejection_reason = rejection_reason or "Verification documents or details did not meet platform requirements."
+            messages.warning(request, f"Real Estate Partner application for '{partner_user.email}' was REJECTED.")
+        elif action == 'request_docs' or new_status == PartnerApprovalStatusChoices.ADDITIONAL_DOCS_REQUIRED:
+            partner_user.partner_approval_status = PartnerApprovalStatusChoices.ADDITIONAL_DOCS_REQUIRED
+            partner_user.partner_rejection_reason = rejection_reason or "Additional registration documents required."
+            messages.info(request, f"Requested additional documents from '{partner_user.email}'.")
+        elif new_status in dict(PartnerApprovalStatusChoices.choices):
+            partner_user.partner_approval_status = new_status
+            if rejection_reason:
+                partner_user.partner_rejection_reason = rejection_reason
+            messages.success(request, f"Status updated to '{partner_user.get_partner_approval_status_display()}'.")
+
+        if notes:
+            partner_user.verification_notes = notes
+
+        partner_user.save()
+
+        doc_ids = request.POST.getlist('doc_verified')
+        documents.update(verification_status=PartnerApprovalStatusChoices.PENDING)
+        if doc_ids:
+            documents.filter(id__in=doc_ids).update(verification_status=PartnerApprovalStatusChoices.APPROVED)
+
+        return redirect('accounts:admin_partner_detail', user_id=partner_user.id)
+
+    context = {
+        'partner': partner_user,
+        'documents': documents,
+        'status_choices': PartnerApprovalStatusChoices.choices,
+    }
+    return render(request, 'admin_panel/partner_detail.html', context)
+
+
+@login_required
+@admin_required
+def admin_download_partner_document_view(request, doc_id):
+    """
+    Secure document preview/download view for administrators.
+    Streams file content safely without exposing files publicly.
+    """
+    doc = get_object_or_404(PartnerDocument, id=doc_id)
+    if not doc.file or not os.path.exists(doc.file.path):
+        raise Http404("Document file not found on server.")
+
+    response = FileResponse(open(doc.file.path, 'rb'))
+    ext = os.path.splitext(doc.file.name)[1].lower()
+    if ext == '.pdf':
+        response['Content-Type'] = 'application/pdf'
+        response['Content-Disposition'] = f'inline; filename="{doc.original_filename or os.path.basename(doc.file.name)}"'
+    elif ext in ['.jpg', '.jpeg']:
+        response['Content-Type'] = 'image/jpeg'
+    elif ext == '.png':
+        response['Content-Type'] = 'image/png'
+    elif ext == '.webp':
+        response['Content-Type'] = 'image/webp'
+    else:
+        response['Content-Disposition'] = f'attachment; filename="{doc.original_filename or os.path.basename(doc.file.name)}"'
+    return response

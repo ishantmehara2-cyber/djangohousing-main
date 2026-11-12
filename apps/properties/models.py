@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from apps.locations.models import City, Locality, SubLocality
+from apps.core.validators import validate_file_size_5mb, validate_image_file
 
 class ListingPurposeChoices(models.TextChoices):
     BUY = 'BUY', 'Buy / Sale'
@@ -185,11 +186,26 @@ class Property(models.Model):
     views_count = models.IntegerField(default=0)
     rejection_reason = models.TextField(null=True, blank=True)
 
+    # Main Property Thumbnail Reference
+    thumbnail_media = models.ForeignKey('PropertyMedia', on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+
     # Dynamic form field attributes store
     dynamic_attributes = models.JSONField(default=dict, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def get_main_thumbnail_url(self):
+        """
+        Returns the main selected property thumbnail file URL, falling back to first uploaded image if available.
+        """
+        if self.thumbnail_media and self.thumbnail_media.file:
+            return self.thumbnail_media.file.url
+        first_media = self.media.filter(media_type=MediaTypeChoices.IMAGE).first()
+        if first_media and first_media.file:
+            return first_media.file.url
+        return '/static/images/placeholder-property.jpg'
 
     def clean(self):
         super().clean()
@@ -241,7 +257,7 @@ class PropertyAmenity(models.Model):
 
 class PropertyMedia(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='media')
-    file = models.FileField(upload_to='property_media/')
+    file = models.FileField(upload_to='property_media/', validators=[validate_file_size_5mb])
     media_type = models.CharField(max_length=20, choices=MediaTypeChoices.choices, default=MediaTypeChoices.IMAGE)
     caption = models.CharField(max_length=255, null=True, blank=True)
     display_order = models.IntegerField(default=0)

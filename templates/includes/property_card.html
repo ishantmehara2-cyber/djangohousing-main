@@ -1,15 +1,13 @@
 <div class="property-card group">
     <div>
         <div class="property-card-media">
-            {% with first_media=prop.media.first %}
-                {% if first_media %}
-                    <img src="{{ first_media.file.url }}" alt="{{ prop.title }}" class="property-card-img" loading="lazy">
-                {% else %}
-                    <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100">
-                        No Image Available
-                    </div>
-                {% endif %}
-            {% endwith %}
+            {% if prop.get_main_thumbnail_url %}
+                <img src="{{ prop.get_main_thumbnail_url }}" alt="{{ prop.title }}" class="property-card-img" loading="lazy">
+            {% else %}
+                <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-gray-100">
+                    No Image Available
+                </div>
+            {% endif %}
             <span class="absolute top-3 left-3 badge-purpose px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">
                 {{ prop.get_listing_purpose_display }}
             </span>

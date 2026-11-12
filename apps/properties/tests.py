@@ -20,7 +20,8 @@ class HousingCloneComprehensiveTest(TestCase):
             username='testowner',
             email='owner@example.com',
             password='Password123',
-            role=RoleChoices.OWNER
+            role=RoleChoices.OWNER,
+            partner_approval_status='APPROVED'
         )
         self.agent = User.objects.create_user(
             username='testagent',
@@ -190,7 +191,13 @@ class HousingCloneComprehensiveTest(TestCase):
 
         # Owner edit active property triggers re-review
         edit_url = reverse('properties:edit', kwargs={'slug': self.prop_buy.slug})
-        response = self.client.post(edit_url, {'title': 'Updated Luxury 3 BHK', 'price': '26000000'}, follow=True)
+        response = self.client.post(edit_url, {
+            'title': 'Updated Luxury 3 BHK',
+            'price': '26000000',
+            'state': str(self.state.id),
+            'city': str(self.city_mumbai.id),
+            'locality': str(self.locality_bandra.id)
+        }, follow=True)
         self.assertEqual(response.status_code, 200)
         self.prop_buy.refresh_from_db()
         self.assertEqual(self.prop_buy.listing_state, ListingStateChoices.PENDING_APPROVAL)

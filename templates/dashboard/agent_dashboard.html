@@ -1,84 +1,225 @@
 {% extends 'base.html' %}
 
-{% block title %}Agent Dashboard | Housing..{% endblock %}
+{% block title %}Real Estate Partner Dashboard | Housing..{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Header Banner -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-6 rounded-3xl shadow-sm gap-4">
         <div>
             <div class="flex items-center space-x-2">
                 <span class="text-[10px] font-black text-brand-primary uppercase tracking-wider bg-brand-50 px-2.5 py-1 rounded-full border border-brand-100">
-                    REAL ESTATE AGENT & BROKER DASHBOARD
+                    REAL ESTATE PARTNER DASHBOARD
                 </span>
+                {% if user.partner_approval_status == 'APPROVED' %}
+                    <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                        ✓ APPROVED PARTNER
+                    </span>
+                {% elif user.partner_approval_status == 'REJECTED' %}
+                    <span class="text-[10px] font-extrabold text-red-700 bg-red-50 px-2.5 py-1 rounded-full border border-red-200">
+                        ✕ REJECTED
+                    </span>
+                {% elif user.partner_approval_status == 'ADDITIONAL_DOCS_REQUIRED' %}
+                    <span class="text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                        ⚠ ADDITIONAL DOCS REQUIRED
+                    </span>
+                {% else %}
+                    <span class="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                        ⏳ VERIFICATION PENDING
+                    </span>
+                {% endif %}
             </div>
-            <h1 class="text-2xl font-black text-gray-900 mt-2">Welcome, {{ user.first_name|default:user.username }}!</h1>
-            <p class="text-xs text-gray-500 font-medium">Manage assigned listings, convert client leads, and schedule visits.</p>
+            <h1 class="text-2xl font-black text-gray-900 mt-2">{{ user.agency_name|default:user.get_full_name|default:user.username }}</h1>
+            <p class="text-xs text-gray-500 font-medium">Manage property listings, track verification status, and view customer enquiries.</p>
         </div>
+
         <div class="flex items-center space-x-3">
-            <a href="/post-property/" class="bg-brand-primary hover:bg-brand-hover text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
-                + Post New Listing
+            {% if can_post_property %}
+                <a href="{% url 'properties:post-property' %}" class="bg-brand-primary hover:bg-brand-hover text-white px-5 py-3 rounded-xl text-xs font-bold transition shadow-sm">
+                    + Post Property Listing
+                </a>
+            {% else %}
+                <button disabled title="{{ posting_msg }}" class="bg-gray-300 text-gray-500 cursor-not-allowed px-5 py-3 rounded-xl text-xs font-bold shadow-none">
+                    + Post Property Listing (Disabled)
+                </button>
+            {% endif %}
+            <a href="{% url 'accounts:profile' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-3 rounded-xl text-xs font-bold transition">
+                Edit Business Profile
             </a>
-            <a href="{% url 'accounts:profile' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl text-xs font-bold transition">
-                My Profile
-            </a>
+        </div>
+    </div>
+
+    <!-- Verification Status Notice Box (MODULE 4 & 8) -->
+    {% if not can_post_property %}
+        <div class="p-5 rounded-2xl border text-xs space-y-2 {% if user.partner_approval_status == 'REJECTED' %}bg-red-50 border-red-200 text-red-900{% elif user.partner_approval_status == 'ADDITIONAL_DOCS_REQUIRED' %}bg-amber-50 border-amber-200 text-amber-900{% else %}bg-blue-50 border-blue-200 text-blue-900{% endif %}">
+            <div class="flex items-center space-x-2 font-black text-sm">
+                <span>Verification Status Notice</span>
+            </div>
+            <p class="font-semibold">{{ posting_msg }}</p>
+            {% if user.partner_approval_status == 'PENDING' %}
+                <p class="text-[11px] text-blue-800">Our admin team is reviewing your submitted business registration documents. Property posting privileges will be activated automatically once approved.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Partner Business Profile & Documents (MODULE 2 & 8) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Business Details -->
+        <div class="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-3">
+            <h2 class="text-xs font-extrabold text-gray-900 uppercase tracking-wider border-b pb-2">Business Details</h2>
+            <div class="space-y-2 text-xs">
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block">Agency / Business Name</span>
+                    <span class="font-extrabold text-gray-900">{{ user.agency_name|default:"Individual Real Estate Partner" }}</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block">Business Address</span>
+                    <span class="font-bold text-gray-700">{{ user.business_address|default:"Not specified" }}</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase block">City & State</span>
+                    <span class="font-bold text-gray-700">{{ user.business_city|default:"N/A" }}, {{ user.business_state|default:"N/A" }} (PIN: {{ user.business_pincode|default:"N/A" }})</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submitted Documents -->
+        <div class="md:col-span-2 bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h2 class="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Registration & Verification Documents</h2>
+                <span class="text-[10px] font-bold text-gray-400">Total: {{ documents|length }}</span>
+            </div>
+
+            <div class="space-y-3">
+                {% for doc in documents %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+                        <div>
+                            <span class="font-bold text-brand-primary text-[11px] block">{{ doc.get_document_type_display }}</span>
+                            <span class="font-semibold text-gray-800">{{ doc.original_filename|default:doc.file.name }}</span>
+                            <span class="text-[10px] text-gray-400 block">Uploaded: {{ doc.uploaded_at|date:"M d, Y" }} | Size: {{ doc.file_size|filesizeformat }}</span>
+                        </div>
+                        <div>
+                            {% if doc.verification_status == 'APPROVED' %}
+                                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">VERIFIED</span>
+                            {% else %}
+                                <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">PENDING REVIEW</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-xs text-gray-400 italic">No verification documents uploaded yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Upload Additional Document -->
+            <form method="POST" action="{% url 'accounts:partner_upload_document' %}" enctype="multipart/form-data" class="pt-2 border-t border-gray-100 space-y-3">
+                {% csrf_token %}
+                <span class="text-[10px] font-bold text-gray-500 uppercase block">Upload Additional or Replacement Document (Max 5 MB)</span>
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                    <div class="sm:col-span-5">
+                        <select name="document_type" class="w-full bg-gray-50 border border-gray-200 text-xs font-bold rounded-xl p-2.5 outline-none">
+                            {% for val, label in doc_types %}
+                                <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="sm:col-span-5">
+                        <input type="file" name="document_file" required accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="validateFileSize(this)" class="block w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-primary">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white py-2.5 rounded-xl text-xs font-bold transition">
+                            Upload
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white border border-gray-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Assigned Listings</span>
-                <p class="text-2xl font-black text-gray-900 mt-1">{{ properties|length }}</p>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Total Submitted</span>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_properties }}</p>
             </div>
-            <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-lg font-bold">
                 🏢
             </div>
         </div>
-        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+
+        <div class="bg-white border border-gray-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Client Leads</span>
-                <p class="text-2xl font-black text-gray-900 mt-1">{{ leads|length }}</p>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Active / Published</span>
+                <p class="text-2xl font-black text-emerald-600 mt-1">{{ active_properties }}</p>
             </div>
-            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                👥
+            <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-lg font-bold">
+                ✓
             </div>
         </div>
-        <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+
+        <div class="bg-white border border-gray-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Scheduled Visits</span>
-                <p class="text-2xl font-black text-gray-900 mt-1">{{ visits|length }}</p>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Pending Approvals</span>
+                <p class="text-2xl font-black text-amber-600 mt-1">{{ pending_properties }}</p>
             </div>
-            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                📅
+            <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-lg font-bold">
+                ⏳
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-5 rounded-3xl shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Rejected Listings</span>
+                <p class="text-2xl font-black text-red-600 mt-1">{{ rejected_properties }}</p>
+            </div>
+            <div class="w-10 h-10 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-lg font-bold">
+                ✕
             </div>
         </div>
     </div>
 
-    <!-- Assigned Listings -->
+    <!-- Partner Property Listings (MODULE 6 & 8) -->
     <div class="space-y-4">
         <div class="flex items-center justify-between">
-            <h2 class="text-lg font-black text-gray-900">Assigned Property Listings</h2>
-            <a href="/post-property/" class="text-xs font-bold text-brand-primary hover:underline">+ Post Listing</a>
+            <h2 class="text-lg font-black text-gray-900">Your Property Portfolio</h2>
+            {% if can_post_property %}
+                <a href="{% url 'properties:post-property' %}" class="text-xs font-bold text-brand-primary hover:underline">+ Post New Listing</a>
+            {% endif %}
         </div>
+
         {% if properties %}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {% for prop in properties %}
-                    <div class="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-100 text-gray-800">
-                                {{ prop.get_listing_state_display }}
-                            </span>
-                            <span class="text-xs font-bold text-brand-primary">₹ {{ prop.price|floatformat:0 }}</span>
+                    <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm space-y-3 p-4 flex flex-col justify-between">
+                        <div>
+                            <!-- Selected Main Thumbnail Preview -->
+                            <div class="relative w-full h-40 bg-gray-100 rounded-2xl overflow-hidden mb-3">
+                                <img src="{{ prop.get_main_thumbnail_url }}" alt="{{ prop.title }}" class="w-full h-full object-cover">
+                                <span class="absolute top-2 left-2 bg-black/70 text-white text-[9px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
+                                    ★ Main Cover Thumbnail
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded {% if prop.listing_state == 'ACTIVE' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% elif prop.listing_state == 'REJECTED' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-amber-50 text-amber-800 border border-amber-200{% endif %}">
+                                    {{ prop.get_listing_state_display }}
+                                </span>
+                                <span class="text-xs font-black text-brand-primary">
+                                    {% if prop.price %}₹ {{ prop.price|floatformat:0 }}{% elif prop.rent %}₹ {{ prop.rent|floatformat:0 }}/mo{% else %}Contact for Price{% endif %}
+                                </span>
+                            </div>
+
+                            <h3 class="font-bold text-sm text-gray-900 line-clamp-1 mt-2">{{ prop.title }}</h3>
+                            <p class="text-xs text-gray-500">📍 {{ prop.locality.name }}, {{ prop.city.name }}</p>
                         </div>
-                        <h3 class="font-bold text-sm text-gray-900 line-clamp-1">{{ prop.title }}</h3>
-                        <p class="text-xs text-gray-500">📍 {{ prop.locality.name }}, {{ prop.city.name }}</p>
-                        <div class="flex items-center space-x-2 pt-2">
+
+                        <div class="flex items-center space-x-2 pt-3 border-t border-gray-100">
                             <a href="{% url 'properties:detail' prop.slug %}" class="flex-1 text-center bg-gray-900 text-white py-2 rounded-xl text-xs font-bold hover:bg-black transition">
                                 View
                             </a>
                             <a href="{% url 'properties:edit' prop.slug %}" class="flex-1 text-center bg-gray-100 text-gray-800 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition">
-                                Edit
+                                Edit & Media
                             </a>
                         </div>
                     </div>
@@ -86,52 +227,27 @@
             </div>
         {% else %}
             <div class="bg-white border border-gray-200 rounded-3xl p-12 text-center space-y-3">
-                <p class="text-base font-bold text-gray-700">No properties assigned to your account yet.</p>
-                <a href="/post-property/" class="inline-block bg-brand-primary text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm">
-                    Post Property Listing
-                </a>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Client Leads & Status Updates -->
-    <div class="space-y-4">
-        <h2 class="text-lg font-black text-gray-900">Assigned Client Leads</h2>
-        {% if leads %}
-            <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
-                <div class="divide-y divide-gray-100">
-                    {% for lead in leads %}
-                        <div class="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div class="space-y-1">
-                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-brand-50 text-brand-primary">
-                                    {{ lead.get_status_display }}
-                                </span>
-                                <h4 class="font-bold text-sm text-gray-900 mt-1">Property: {{ lead.property.title }}</h4>
-                                <p class="text-xs text-gray-600">Client: <b>{{ lead.lead_user.get_full_name|default:lead.lead_user.username }}</b> ({{ lead.lead_user.email }}, {{ lead.lead_user.phone|default:"No phone" }})</p>
-                                <p class="text-xs text-gray-500 italic">Notes: "{{ lead.notes }}"</p>
-                            </div>
-                            <form method="POST" action="{% url 'accounts:update_lead_status' lead.id %}" class="flex items-center space-x-2">
-                                {% csrf_token %}
-                                <select name="status" class="bg-gray-50 border border-gray-200 p-2 rounded-xl text-xs font-bold text-gray-800 outline-none">
-                                    <option value="NEW" {% if lead.status == 'NEW' %}selected="selected"{% endif %}>New</option>
-                                    <option value="CONTACTED" {% if lead.status == 'CONTACTED' %}selected="selected"{% endif %}>Contacted</option>
-                                    <option value="MEETING_SCHEDULED" {% if lead.status == 'MEETING_SCHEDULED' %}selected="selected"{% endif %}>Meeting Scheduled</option>
-                                    <option value="CONVERTED" {% if lead.status == 'CONVERTED' %}selected="selected"{% endif %}>Converted</option>
-                                    <option value="LOST" {% if lead.status == 'LOST' %}selected="selected"{% endif %}>Lost</option>
-                                </select>
-                                <button type="submit" class="bg-gray-900 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-black transition">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% else %}
-            <div class="bg-white border border-gray-200 rounded-3xl p-8 text-center text-xs font-bold text-gray-400">
-                No client leads assigned yet.
+                <p class="text-base font-bold text-gray-700">No properties in your portfolio yet.</p>
+                {% if can_post_property %}
+                    <a href="{% url 'properties:post-property' %}" class="inline-block bg-brand-primary text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm">
+                        Post Your First Property
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>
 </div>
+
+<script>
+function validateFileSize(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5 MB
+        if (file.size > maxSize) {
+            alert(`Maximum allowed file size is 5 MB per file. File "${file.name}" is ${(file.size / (1024*1024)).toFixed(2)} MB.`);
+            input.value = '';
+        }
+    }
+}
+</script>
 {% endblock %}

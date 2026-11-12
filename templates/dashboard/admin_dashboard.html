@@ -55,12 +55,46 @@
         </div>
         <div class="bg-white border border-gray-200 p-6 rounded-3xl shadow-sm flex items-center justify-between">
             <div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Total Inquiries</span>
-                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_enquiries }}</p>
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Loan Inquiry Leads</span>
+                <p class="text-2xl font-black text-brand-primary mt-1">{{ total_loan_leads }}</p>
             </div>
             <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                📩
+                💰
             </div>
+        </div>
+    </div>
+
+    <!-- Home Loan Inquiry Leads Summary (MODULE 9) -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-black text-gray-900">Home Loan Inquiry Leads Overview</h2>
+            <a href="{% url 'services:admin-loan-inquiries' %}" class="text-xs font-bold text-brand-primary hover:underline">Manage All Leads →</a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-4">
+            <a href="{% url 'services:admin-loan-inquiries' %}" class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm text-center hover:border-gray-900 transition">
+                <span class="text-[10px] font-bold text-gray-400 uppercase block">Total Leads</span>
+                <p class="text-xl font-black text-gray-900 mt-1">{{ total_loan_leads }}</p>
+            </a>
+            <a href="{% url 'services:admin-loan-inquiries' %}?status=NEW" class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm text-center hover:border-blue-600 transition">
+                <span class="text-[10px] font-bold text-blue-500 uppercase block">New</span>
+                <p class="text-xl font-black text-blue-600 mt-1">{{ new_loan_leads }}</p>
+            </a>
+            <a href="{% url 'services:admin-loan-inquiries' %}?status=CONTACT_PENDING" class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm text-center hover:border-amber-600 transition">
+                <span class="text-[10px] font-bold text-amber-500 uppercase block">Contact Pending</span>
+                <p class="text-xl font-black text-amber-600 mt-1">{{ pending_loan_leads }}</p>
+            </a>
+            <a href="{% url 'services:admin-loan-inquiries' %}?status=UNDER_BANK_EVALUATION" class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm text-center hover:border-indigo-600 transition">
+                <span class="text-[10px] font-bold text-indigo-500 uppercase block">Under Evaluation</span>
+                <p class="text-xl font-black text-indigo-600 mt-1">{{ eval_loan_leads }}</p>
+            </a>
+            <a href="{% url 'services:admin-loan-inquiries' %}?status=LOAN_APPROVED" class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm text-center hover:border-emerald-600 transition">
+                <span class="text-[10px] font-bold text-emerald-500 uppercase block">Approved</span>
+                <p class="text-xl font-black text-emerald-600 mt-1">{{ approved_loan_leads }}</p>
+            </a>
+            <a href="{% url 'services:admin-loan-inquiries' %}?status=LOAN_REJECTED" class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm text-center hover:border-red-600 transition">
+                <span class="text-[10px] font-bold text-red-500 uppercase block">Rejected</span>
+                <p class="text-xl font-black text-red-600 mt-1">{{ rejected_loan_leads }}</p>
+            </a>
         </div>
     </div>
 

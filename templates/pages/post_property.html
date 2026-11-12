@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}Post Property | Housing..{% endblock %}
+{% block title %}{% if property.id %}Edit Property{% else %}Post Property{% endif %} | Housing..{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
         <div class="space-y-1">
-            <span class="text-[10px] font-bold text-brand-primary uppercase">Seller Portal</span>
-            <h1 class="text-2xl font-black text-gray-900">Add Your Property Listing</h1>
-            <p class="text-xs text-gray-400 font-medium">Complete the form below to list your property as a Draft or Submit for Admin Approval.</p>
+            <span class="text-[10px] font-bold text-brand-primary uppercase">Seller / Partner Portal</span>
+            <h1 class="text-2xl font-black text-gray-900">{% if property.id %}Edit Property Listing{% else %}Add Your Property Listing{% endif %}</h1>
+            <p class="text-xs text-gray-400 font-medium">Complete property details, upload photos, and select your main cover thumbnail.</p>
         </div>
 
         {% if messages %}
@@ -21,10 +21,13 @@
             {% endfor %}
         {% endif %}
 
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form method="POST" enctype="multipart/form-data" id="propertyForm" class="space-y-6">
             {% csrf_token %}
+            <input type="hidden" name="selected_thumbnail_index" id="selectedThumbnailIndex" value="0">
+            <input type="hidden" name="selected_thumbnail_id" id="selectedThumbnailId" value="{{ property.thumbnail_media_id|default:'' }}">
+            <input type="hidden" name="delete_media_id" id="deleteMediaId" value="">
 
-            <!-- Step 1 & 2: Purpose & Type -->
+            <!-- Purpose & Type -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Listing Purpose *</label>
@@ -50,7 +53,7 @@
                 <input type="text" name="title" value="{{ property.title }}" required placeholder="e.g. Luxury 3 BHK Apartment with Sea View" class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
             </div>
 
-            <!-- Pricing & Financials -->
+            <!-- Pricing -->
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Sale Price (₹)</label>
@@ -70,7 +73,7 @@
                 </div>
             </div>
 
-            <!-- Specifications -->
+            <!-- Specs -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">BHK</label>
@@ -94,7 +97,7 @@
                 </div>
             </div>
 
-            <!-- Location Hierarchy (State -> District -> Locality -> Sub-Locality) -->
+            <!-- Location Hierarchy -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">State / Union Territory *</label>
@@ -115,7 +118,8 @@
                     </select>
                 </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Locality *</label>
                     <select id="locality-select" name="locality" required class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">
@@ -136,80 +140,6 @@
                 </div>
             </div>
 
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const stateSelect = document.getElementById('state-select');
-                    const districtSelect = document.getElementById('district-select');
-                    const localitySelect = document.getElementById('locality-select');
-                    const subLocalitySelect = document.getElementById('sub-locality-select');
-
-                    stateSelect.addEventListener('change', function() {
-                        const stateId = this.value;
-                        districtSelect.innerHTML = '<option value="">Select District</option>';
-                        localitySelect.innerHTML = '<option value="">Select Locality</option>';
-                        subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
-                        if (!stateId) return;
-
-                        fetch(`/api/locations/districts/?state_id=${stateId}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                data.districts.forEach(d => {
-                                    const opt = document.createElement('option');
-                                    opt.value = d.id;
-                                    opt.textContent = d.name;
-                                    districtSelect.appendChild(opt);
-                                });
-                            });
-
-                        fetch(`/api/locations/localities/?state_id=${stateId}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                data.localities.forEach(l => {
-                                    const opt = document.createElement('option');
-                                    opt.value = l.id;
-                                    opt.textContent = l.name + (l.pincode ? ` - ${l.pincode}` : '');
-                                    localitySelect.appendChild(opt);
-                                });
-                            });
-                    });
-
-                    districtSelect.addEventListener('change', function() {
-                        const districtId = this.value;
-                        localitySelect.innerHTML = '<option value="">Select Locality</option>';
-                        subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
-                        if (!districtId) return;
-
-                        fetch(`/api/locations/localities/?district_id=${districtId}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                data.localities.forEach(l => {
-                                    const opt = document.createElement('option');
-                                    opt.value = l.id;
-                                    opt.textContent = l.name + (l.pincode ? ` - ${l.pincode}` : '');
-                                    localitySelect.appendChild(opt);
-                                });
-                            });
-                    });
-
-                    localitySelect.addEventListener('change', function() {
-                        const localityId = this.value;
-                        subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
-                        if (!localityId) return;
-
-                        fetch(`/api/locations/sub-localities/?locality_id=${localityId}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                data.sub_localities.forEach(s => {
-                                    const opt = document.createElement('option');
-                                    opt.value = s.id;
-                                    opt.textContent = s.name;
-                                    subLocalitySelect.appendChild(opt);
-                                });
-                            });
-                    });
-                });
-            </script>
-
             <!-- Address & Pincode -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="sm:col-span-2">
@@ -228,7 +158,7 @@
                 <textarea name="description" rows="4" required placeholder="Describe layout, amenities, neighborhood..." class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none">{{ property.description }}</textarea>
             </div>
 
-            <!-- Amenities Checkboxes -->
+            <!-- Amenities -->
             <div>
                 <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Amenities & Features</label>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-200">
@@ -241,23 +171,276 @@
                 </div>
             </div>
 
-            <!-- Image Upload -->
-            <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Property Images (Select Multiple)</label>
-                <input type="file" name="images" multiple class="bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none cursor-pointer">
-                <p class="text-[10px] text-gray-400 mt-1">Supported formats: JPG, PNG, WebP (Max size: 5MB per image).</p>
+            <!-- Existing Media Gallery & Cover Thumbnail Selection (MODULE 6) -->
+            {% if property.id and property.media.all %}
+                <div class="space-y-3 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Select Main Cover Thumbnail (Existing Photos)</h3>
+                        <span class="text-[10px] font-bold text-brand-primary">Click one photo to mark as Main Cover Thumbnail</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {% for m in property.media.all %}
+                            <div class="relative group bg-white p-2 rounded-xl border-2 transition text-center {% if property.thumbnail_media_id == m.id %}border-brand-primary ring-2 ring-brand-primary/30{% else %}border-gray-200{% endif %}" id="existing-media-card-{{ m.id }}">
+                                <img src="{{ m.file.url }}" alt="Property Image" class="w-full h-24 object-cover rounded-lg mb-2">
+
+                                <div class="flex items-center justify-between px-1">
+                                    <label class="flex items-center space-x-1 cursor-pointer text-[10px] font-bold text-gray-700">
+                                        <input type="radio" name="main_thumbnail_radio" value="{{ m.id }}" {% if property.thumbnail_media_id == m.id or forloop.first and not property.thumbnail_media_id %}checked{% endif %} onchange="setExistingThumbnail('{{ m.id }}')">
+                                        <span>{% if property.thumbnail_media_id == m.id %}★ Selected Cover{% else %}Set as Cover{% endif %}</span>
+                                    </label>
+
+                                    <button type="button" onclick="deleteExistingMedia('{{ m.id }}')" title="Delete Photo" class="text-red-500 hover:text-red-700 text-xs font-bold">
+                                        🗑
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Upload New Photos & Custom Thumbnail Selection (MODULE 6 & 7) -->
+            <div class="space-y-3 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Upload Property Photographs (Maximum 8 Photos Total)</h3>
+                        <p class="text-[11px] text-gray-500">Maximum 8 photos allowed per property (Max size: 5 MB per file). Click one photo preview to mark as Main Cover Thumbnail.</p>
+                    </div>
+                    <span id="photoCountBadge" class="text-xs font-extrabold text-brand-primary bg-brand-50 border border-brand-100 px-3 py-1.5 rounded-xl whitespace-nowrap">
+                        0 of 8 photos selected
+                    </span>
+                </div>
+
+                <div>
+                    <input type="file" name="images" id="imageFileInput" multiple accept=".jpg,.jpeg,.png,.webp" onchange="handleImageSelection(this)" class="bg-white border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none cursor-pointer">
+                </div>
+
+                <!-- Preview Grid with Thumbnail Selector & Remove Buttons -->
+                <div id="imagePreviewContainer" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                </div>
             </div>
 
-            <!-- Actions (Save as Draft vs Submit for Approval) -->
+            <!-- Actions -->
             <div class="flex items-center space-x-4 pt-4 border-t border-gray-100">
                 <button type="submit" name="action" value="draft" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-3.5 rounded-xl font-bold text-xs transition">
                     Save as Draft
                 </button>
                 <button type="submit" name="action" value="submit" class="flex-1 bg-brand-primary hover:bg-brand-hover text-white py-3.5 rounded-xl font-bold text-xs transition shadow-md">
-                    Submit for Admin Approval
+                    Submit Property Listing
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+let selectedFilesQueue = [];
+let selectedThumbnailIndex = 0;
+
+function handleImageSelection(input) {
+    if (!input.files || input.files.length === 0) {
+        return;
+    }
+
+    const existingCards = document.querySelectorAll('[id^="existing-media-card-"]');
+    const existingCount = existingCards ? existingCards.length : 0;
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+
+    let newlySelected = Array.from(input.files);
+
+    for (let file of newlySelected) {
+        if (file.size > maxSize) {
+            alert(`Maximum allowed file size is 5 MB per file. Image "${file.name}" is ${(file.size / (1024*1024)).toFixed(2)} MB and was skipped.`);
+            continue;
+        }
+
+        if (existingCount + selectedFilesQueue.length >= 8) {
+            alert(`Maximum limit of 8 property photos reached. Only 8 photos allowed total per listing.`);
+            break;
+        }
+
+        // Avoid adding duplicate file with same name and size
+        if (!selectedFilesQueue.some(f => f.name === file.name && f.size === file.size)) {
+            selectedFilesQueue.push(file);
+        }
+    }
+
+    syncFileInputAndRenderPreviews();
+}
+
+function removeQueueImage(index) {
+    if (index >= 0 && index < selectedFilesQueue.length) {
+        selectedFilesQueue.splice(index, 1);
+        if (selectedThumbnailIndex >= selectedFilesQueue.length) {
+            selectedThumbnailIndex = Math.max(0, selectedFilesQueue.length - 1);
+        }
+        syncFileInputAndRenderPreviews();
+    }
+}
+
+function syncFileInputAndRenderPreviews() {
+    const input = document.getElementById('imageFileInput');
+    const container = document.getElementById('imagePreviewContainer');
+    const countBadge = document.getElementById('photoCountBadge');
+    const hiddenThumbInput = document.getElementById('selectedThumbnailIndex');
+
+    // Sync files to input using DataTransfer
+    try {
+        const dt = new DataTransfer();
+        selectedFilesQueue.forEach(file => dt.items.add(file));
+        input.files = dt.files;
+    } catch (e) {
+        // Fallback for older browsers
+    }
+
+    const existingCards = document.querySelectorAll('[id^="existing-media-card-"]');
+    const existingCount = existingCards ? existingCards.length : 0;
+    const totalCount = existingCount + selectedFilesQueue.length;
+
+    if (countBadge) {
+        countBadge.textContent = `${totalCount} of 8 photos selected`;
+    }
+
+    if (selectedFilesQueue.length === 0) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.innerHTML = '';
+
+    hiddenThumbInput.value = selectedThumbnailIndex;
+
+    selectedFilesQueue.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const card = document.createElement('div');
+            const isSelected = (index === selectedThumbnailIndex);
+            card.className = `relative bg-white p-3 rounded-2xl border-2 transition text-center shadow-sm ${isSelected ? 'border-brand-primary ring-2 ring-brand-primary/30' : 'border-gray-200'}`;
+            card.id = `new-img-card-${index}`;
+
+            card.innerHTML = `
+                <div class="relative w-full h-24 bg-gray-100 rounded-xl overflow-hidden mb-2">
+                    <img src="${e.target.result}" alt="${file.name}" class="w-full h-full object-cover">
+                    <button type="button" onclick="removeQueueImage(${index})" title="Remove Photo" class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                        ✕
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-center space-x-1.5 pt-1">
+                    <input type="radio" name="new_thumb_radio" value="${index}" ${isSelected ? 'checked' : ''} onchange="setNewThumbnail(${index})">
+                    <span class="text-[10px] font-extrabold ${isSelected ? 'text-brand-primary' : 'text-gray-700'}">${isSelected ? '★ Selected Cover' : 'Set Cover'}</span>
+                </div>
+                <span class="block text-[9px] text-gray-400 font-medium truncate mt-1">${file.name}</span>
+            `;
+
+            card.onclick = function(evt) {
+                if (evt.target.tagName !== 'INPUT' && evt.target.tagName !== 'BUTTON') {
+                    setNewThumbnail(index);
+                }
+            };
+
+            container.appendChild(card);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function setNewThumbnail(index) {
+    selectedThumbnailIndex = index;
+    document.getElementById('selectedThumbnailIndex').value = index;
+    syncFileInputAndRenderPreviews();
+}
+
+function setExistingThumbnail(mediaId) {
+    document.getElementById('selectedThumbnailId').value = mediaId;
+}
+
+function deleteExistingMedia(mediaId) {
+    if (confirm("Are you sure you want to delete this property image?")) {
+        document.getElementById('deleteMediaId').value = mediaId;
+        document.getElementById('propertyForm').submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const stateSelect = document.getElementById('state-select');
+    const districtSelect = document.getElementById('district-select');
+    const localitySelect = document.getElementById('locality-select');
+    const subLocalitySelect = document.getElementById('sub-locality-select');
+
+    if (stateSelect) {
+        stateSelect.addEventListener('change', function() {
+            const stateId = this.value;
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+            localitySelect.innerHTML = '<option value="">Select Locality</option>';
+            subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
+            if (!stateId) return;
+
+            fetch(`/api/locations/districts/?state_id=${stateId}`)
+                .then(res => res.json())
+                .then(data => {
+                    data.districts.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.name;
+                        districtSelect.appendChild(opt);
+                    });
+                });
+
+            fetch(`/api/locations/localities/?state_id=${stateId}`)
+                .then(res => res.json())
+                .then(data => {
+                    data.localities.forEach(l => {
+                        const opt = document.createElement('option');
+                        opt.value = l.id;
+                        opt.textContent = l.name + (l.pincode ? ` - ${l.pincode}` : '');
+                        localitySelect.appendChild(opt);
+                    });
+                });
+        });
+    }
+
+    if (districtSelect) {
+        districtSelect.addEventListener('change', function() {
+            const districtId = this.value;
+            localitySelect.innerHTML = '<option value="">Select Locality</option>';
+            subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
+            if (!districtId) return;
+
+            fetch(`/api/locations/localities/?district_id=${districtId}`)
+                .then(res => res.json())
+                .then(data => {
+                    data.localities.forEach(l => {
+                        const opt = document.createElement('option');
+                        opt.value = l.id;
+                        opt.textContent = l.name + (l.pincode ? ` - ${l.pincode}` : '');
+                        localitySelect.appendChild(opt);
+                    });
+                });
+        });
+    }
+
+    if (localitySelect) {
+        localitySelect.addEventListener('change', function() {
+            const localityId = this.value;
+            subLocalitySelect.innerHTML = '<option value="">Select Sub-locality</option>';
+            if (!localityId) return;
+
+            fetch(`/api/locations/sub-localities/?locality_id=${localityId}`)
+                .then(res => res.json())
+                .then(data => {
+                    data.sub_localities.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = s.name;
+                        subLocalitySelect.appendChild(opt);
+                    });
+                });
+        });
+    }
+});
+</script>
 {% endblock %}

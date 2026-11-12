@@ -1,17 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %}Register | Housing..{% endblock %}
+{% block title %}Register as Real Estate Partner | Housing..{% endblock %}
 
 {% block content %}
-<div class="max-w-lg mx-auto px-4 py-12">
-    <div class="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm space-y-6">
+<div class="max-w-2xl mx-auto px-4 py-10">
+    <div class="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
         <div class="text-center space-y-1">
-            <h1 class="text-2xl font-black text-gray-900">Create Account</h1>
-            <p class="text-xs text-gray-400 font-medium">Join India's trusted real estate marketplace.</p>
+            <h1 class="text-2xl font-black text-gray-900">Register as Real Estate Partner</h1>
+            <p class="text-xs text-gray-500 font-medium">List properties and manage your real estate portfolio.</p>
         </div>
 
-        <form method="POST" action="{% url 'accounts:register' %}" class="space-y-4">
+        <form method="POST" action="{% url 'accounts:register' %}" enctype="multipart/form-data" id="registrationForm" class="space-y-5">
             {% csrf_token %}
+            <input type="hidden" name="role" value="PARTNER">
+
             {% if form.non_field_errors %}
                 <div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs font-bold space-y-1">
                     {% for error in form.non_field_errors %}
@@ -20,16 +22,23 @@
                 </div>
             {% endif %}
 
+            <!-- Account Type Info Banner -->
+            <div class="bg-brand-50 border border-brand-100 rounded-2xl p-4 text-xs text-brand-900 font-semibold space-y-1">
+                <p class="font-bold text-brand-primary text-sm">Real Estate Partner / Agent Registration</p>
+                <p class="text-[11px] text-gray-600">Please complete your business details and upload your government/business registration document for admin verification.</p>
+            </div>
+
+            <!-- Basic Info -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">First Name</label>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">First Name *</label>
                     {{ form.first_name }}
                     {% if form.first_name.errors %}
                         <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.first_name.errors.0 }}</p>
                     {% endif %}
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Last Name</label>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Last Name *</label>
                     {{ form.last_name }}
                     {% if form.last_name.errors %}
                         <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.last_name.errors.0 }}</p>
@@ -37,40 +46,33 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Email Address</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.email.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Phone Number</label>
-                {{ form.phone }}
-                {% if form.phone.errors %}
-                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.phone.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Account Type (I am a)</label>
-                {{ form.role }}
-                {% if form.role.errors %}
-                    <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.role.errors.0 }}</p>
-                {% endif %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Email Address *</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Mobile Number *</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Password</label>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Password *</label>
                     {{ form.password }}
                     {% if form.password.errors %}
                         <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.password.errors.0 }}</p>
                     {% endif %}
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Confirm Password</label>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Confirm Password *</label>
                     {{ form.confirm_password }}
                     {% if form.confirm_password.errors %}
                         <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.confirm_password.errors.0 }}</p>
@@ -78,14 +80,134 @@
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-brand-primary hover:bg-brand-hover text-white py-3 rounded-xl font-bold text-xs transition shadow-sm">
-                Create Account
+            <!-- REAL ESTATE PARTNER BUSINESS DETAILS -->
+            <div class="space-y-4 pt-2">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Business / Agency Name (Optional where applicable)</label>
+                    {{ form.agency_name }}
+                    {% if form.agency_name.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.agency_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Business Address *</label>
+                    {{ form.business_address }}
+                    {% if form.business_address.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.business_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">State *</label>
+                        {{ form.business_state }}
+                        {% if form.business_state.errors %}
+                            <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.business_state.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">City *</label>
+                        {{ form.business_city }}
+                        {% if form.business_city.errors %}
+                            <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.business_city.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Locality</label>
+                        {{ form.business_locality }}
+                        {% if form.business_locality.errors %}
+                            <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.business_locality.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">PIN Code *</label>
+                    {{ form.business_pincode }}
+                    {% if form.business_pincode.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.business_pincode.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Document Upload Section -->
+                <div class="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                    <div>
+                        <h3 class="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Government / Business Registration Documents *</h3>
+                        <p class="text-[11px] text-gray-500">Require at least ONE document (Gumasta, MSME, Udyam, or GST). Maximum allowed size: 5 MB per file.</p>
+                    </div>
+
+                    <div id="documentInputsContainer" class="space-y-3">
+                        <div class="doc-row grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white p-3 rounded-xl border border-gray-200">
+                            <div class="sm:col-span-5">
+                                <label class="block text-[9px] font-bold text-gray-400 uppercase">Document Category</label>
+                                <select name="doc_category_1" class="w-full bg-gray-50 border border-gray-200 text-xs font-bold rounded-lg p-2 outline-none">
+                                    <option value="GUMASTA">Gumasta / Shop & Establishment</option>
+                                    <option value="MSME">MSME Registration Certificate</option>
+                                    <option value="UDYAM">Udyam Registration Certificate</option>
+                                    <option value="GST">GST Registration Certificate</option>
+                                    <option value="OTHER">Other Permitted Certificate</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-7">
+                                <label class="block text-[9px] font-bold text-gray-400 uppercase">Upload File (Max 5 MB)</label>
+                                <input type="file" name="doc_file_1" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="validateFileSize(this)" class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-primary">
+                            </div>
+                        </div>
+                    </div>
+
+                    <p id="fileSizeGlobalError" class="hidden text-red-600 text-xs font-bold mt-1">Maximum allowed file size is 5 MB per file.</p>
+                </div>
+
+                <!-- PROPERTY LISTING RESPONSIBILITY DECLARATION -->
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl space-y-3">
+                    <h3 class="text-xs font-extrabold text-amber-900 uppercase tracking-wide">Property Listing Responsibility Declaration</h3>
+
+                    <div class="max-h-36 overflow-y-auto bg-white p-3 rounded-xl border border-amber-200 text-[11px] text-gray-700 space-y-2 leading-relaxed">
+                        <p>I hereby declare that all property details, photographs, ownership or authorization information, pricing, location details, documents and other information submitted through this platform are accurate and genuine to the best of my knowledge.</p>
+                        <p>I confirm that I have the necessary ownership rights, authorization or lawful permission to advertise, represent or list each property that I submit.</p>
+                        <p>I accept responsibility for ensuring that the information provided for every property listing is authentic, current and not misleading. I agree to promptly update or remove any listing that becomes inaccurate, unauthorized or unavailable.</p>
+                        <p>I understand that the platform may request supporting documents, investigate complaints, suspend listings or restrict my account if any information is found to be false, misleading or unauthorized.</p>
+                        <p>I acknowledge that I am responsible for the accuracy of the property information and for obtaining all necessary permissions and approvals applicable to my listings.</p>
+                    </div>
+
+                    <div class="flex items-start space-x-2 pt-1">
+                        {{ form.declaration_accepted }}
+                        <label for="id_declaration_accepted" class="text-xs font-bold text-gray-800 cursor-pointer">
+                            I have read and agree to the Property Listing Responsibility Declaration. *
+                        </label>
+                    </div>
+                    {% if form.declaration_accepted.errors %}
+                        <p class="text-red-600 text-[11px] font-semibold mt-1">{{ form.declaration_accepted.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-brand-primary hover:bg-brand-hover text-white py-3.5 rounded-xl font-extrabold text-xs transition shadow-sm">
+                Create Real Estate Partner Account & Proceed to OTP Verification
             </button>
         </form>
 
         <p class="text-center text-xs text-gray-500 font-medium">
-            Already have an account? <a href="{% url 'accounts:login' %}" class="text-brand-primary font-bold hover:underline">Login here</a>
+            Already registered? <a href="{% url 'accounts:login' %}" class="text-brand-primary font-bold hover:underline">Login here</a>
         </p>
     </div>
 </div>
+
+<script>
+function validateFileSize(input) {
+    const errorEl = document.getElementById('fileSizeGlobalError');
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5 MB
+        if (file.size > maxSize) {
+            alert(`Maximum allowed file size is 5 MB per file. File "${file.name}" is ${(file.size / (1024*1024)).toFixed(2)} MB.`);
+            input.value = ''; // clear file input
+            if (errorEl) errorEl.classList.remove('hidden');
+        } else {
+            if (errorEl) errorEl.classList.add('hidden');
+        }
+    }
+}
+</script>
 {% endblock %}

@@ -156,6 +156,11 @@ else:
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or os.getenv('DEFAULT_FROM_EMAIL', 'Housing... <noreply@housingclone.local>')
 
+# Global Upload Restrictions (MODULE 7: 5 MB per file max)
+MAX_FILE_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB per individual file
+DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25 MB max body size for multi-file forms
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB in-memory threshold
+
 # Caching Backend Configuration
 CACHES = {
     'default': {

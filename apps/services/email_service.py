@@ -67,3 +67,12 @@ def send_owner_enquiry_notification_email(owner_name, owner_email, buyer_name, b
         'enquiry_message': message,
     }
     return send_housing_email(subject, 'emails/owner_property_enquiry_notification.html', context, owner_email)
+
+def send_company_rental_agreement_notification_email(agreement_req):
+    company_email = getattr(settings, 'EMAIL_HOST_USER', '').strip() or getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@housingclone.test').strip()
+    subject = f"New Rental Agreement Request #{agreement_req.reference_number} | Housing"
+    context = {
+        'agreement': agreement_req,
+        'submission_date': timezone.now().strftime("%d %B %Y, %I:%M %p"),
+    }
+    return send_housing_email(subject, 'emails/company_rental_agreement_notification.html', context, company_email)

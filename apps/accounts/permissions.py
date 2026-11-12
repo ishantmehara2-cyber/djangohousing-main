@@ -80,12 +80,61 @@ class RoleRequiredMixin:
 def can_edit_property(user, property_obj):
     """
     Backend permission check: Returns True if user owns or posted the property, or is admin.
+    Must also be an approved partner or admin.
     """
-    if not user.is_authenticated:
+    if not user or not user.is_authenticated:
         return False
     if user.is_superuser or user.is_staff or user.is_admin_role:
         return True
+    if not user.is_approved_partner:
+        return False
     return property_obj.owner == user or property_obj.posted_by_user == user
+
+
+def can_post_property(user):
+    """
+    Strict backend permission check for property posting & editing:
+    Only approved Real Estate Partners (and platform admins) have posting privileges.
+    Customers, pending partners, rejected partners, and suspended accounts cannot post properties.
+    """
+    if not user or not user.is_authenticated:
+        return False, "Authentication required to post property listings."
+    if user.is_superuser or user.is_staff or user.is_admin_role:
+        return True, "Admin privilege granted."
+    if user.is_customer_account:
+        return False, "Customer accounts are not permitted to post properties. Please register as a Real Estate Partner."
+    if user.is_real_estate_partner:
+        status = getattr(user, 'partner_approval_status', 'PENDING')
+        if status == 'APPROVED':
+            return True, "Approved Real Estate Partner."
+        elif status == 'PENDING':
+            return False, "Your Real Estate Partner application is pending admin verification."
+        elif status == 'UNDER_VERIFICATION':
+            return False, "Your Real Estate Partner application is currently under verification by our team."
+        elif status == 'REJECTED':
+            reason = f" Reason: {user.partner_rejection_reason}" if getattr(user, 'partner_rejection_reason', None) else ""
+            return False, f"Your Real Estate Partner application was rejected.{reason}"
+        elif status == 'ADDITIONAL_DOCS_REQUIRED':
+            return False, "Additional verification documents are required for your Real Estate Partner account."
+        else:
+            return False, "Your account is not approved to post property listings."
+    return False, "You do not have property posting privileges."
+
+
+def approved_partner_required(view_func):
+    """
+    Decorator to restrict view access strictly to approved Real Estate Partners and Admins.
+    """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('accounts:login')
+        can_post, msg = can_post_property(request.user)
+        if can_post:
+            return view_func(request, *args, **kwargs)
+        messages.error(request, msg)
+        return redirect('accounts:dashboard')
+    return _wrapped_view
 
 
 def can_manage_lead(user, lead_obj):

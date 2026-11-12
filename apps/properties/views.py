@@ -8,7 +8,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import timezone
 
 from apps.accounts.models import RoleChoices
-from apps.accounts.permissions import role_required, can_edit_property, user_has_role
+from apps.accounts.permissions import role_required, can_edit_property, user_has_role, can_post_property
+from apps.core.validators import MAX_UPLOAD_SIZE_BYTES, validate_file_size_5mb
 from apps.properties.models import (
     Property, PropertyType, Amenity, PropertyAmenity, PropertyMedia,
     ListingPurposeChoices, ListingStateChoices, PropertyCategoryChoices,
@@ -204,9 +205,10 @@ def property_compare_view(request):
 
 @login_required
 def post_property_view(request):
-    if not user_has_role(request.user, [RoleChoices.OWNER, RoleChoices.AGENT, RoleChoices.ADMIN]):
-        messages.error(request, "Access denied: Only Property Owners and Agents can post property listings.")
-        return redirect('dashboard')
+    can_post, msg = can_post_property(request.user)
+    if not can_post:
+        messages.error(request, msg)
+        return redirect('accounts:dashboard')
 
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -233,6 +235,7 @@ def post_property_view(request):
         address = request.POST.get('address')
         pincode = request.POST.get('pincode')
         action_type = request.POST.get('action', 'submit')
+        selected_thumbnail_index = request.POST.get('selected_thumbnail_index')
 
         if locality_id and not city_id:
             try:
@@ -301,19 +304,47 @@ def post_property_view(request):
                 pass
 
         images = request.FILES.getlist('images')
+        MAX_PROPERTY_IMAGES = 8
+        if len(images) > MAX_PROPERTY_IMAGES:
+            messages.warning(request, f"Maximum 8 property images allowed. Only the first {MAX_PROPERTY_IMAGES} images were saved.")
+            images = images[:MAX_PROPERTY_IMAGES]
+
+        created_media = []
+
         for idx, img in enumerate(images):
+            if img.size > MAX_UPLOAD_SIZE_BYTES:
+                size_mb = img.size / (1024 * 1024)
+                messages.error(request, f"Maximum allowed file size is 5 MB per file. Image '{img.name}' ({size_mb:.2f} MB) was rejected.")
+                continue
+
             try:
                 validate_property_image(img)
-                PropertyMedia.objects.create(
+                media_obj = PropertyMedia.objects.create(
                     property=prop,
                     file=img,
                     media_type='IMAGE',
                     display_order=idx
                 )
-            except Exception:
-                continue
+                created_media.append(media_obj)
+            except Exception as e:
+                messages.warning(request, f"Image '{img.name}' validation error: {e}")
 
-        # Safely trigger Let's API external sync
+        # Main Thumbnail Selection (MODULE 6)
+        if created_media:
+            main_thumb = created_media[0]
+            if selected_thumbnail_index is not None and str(selected_thumbnail_index).isdigit():
+                idx_val = int(selected_thumbnail_index)
+                if 0 <= idx_val < len(created_media):
+                    main_thumb = created_media[idx_val]
+            prop.thumbnail_media = main_thumb
+            prop.save(update_fields=['thumbnail_media'])
+        elif listing_state != ListingStateChoices.DRAFT:
+            prop.listing_state = ListingStateChoices.DRAFT
+            prop.save(update_fields=['listing_state'])
+            messages.warning(request, "Property requires at least one property image and main thumbnail before publishing. Saved as Draft.")
+            return redirect('properties:edit', slug=prop.slug)
+
+        # Trigger Let's API external sync safely
         try:
             LetsApiAdapter.sync_property(prop)
         except Exception:
@@ -321,10 +352,9 @@ def post_property_view(request):
 
         if listing_state == ListingStateChoices.DRAFT:
             messages.success(request, "Property saved as draft successfully!")
-            return redirect('properties:my-properties')
         else:
-            messages.success(request, "Your property has been submitted successfully and is awaiting admin review.")
-            return redirect('properties:my-properties')
+            messages.success(request, "Your property has been submitted successfully with selected cover thumbnail and is awaiting admin review.")
+        return redirect('properties:my-properties')
 
     states = State.objects.filter(is_active=True)
     districts = District.objects.filter(is_active=True)
@@ -353,11 +383,30 @@ def post_property_view(request):
 def edit_property_view(request, slug):
     property_item = get_object_or_404(Property, slug=slug)
 
-    if not can_edit_property(request.user, property_item):
-        messages.error(request, "Unauthorized action: You can only edit properties you own.")
-        return redirect('dashboard')
+    can_post, msg = can_post_property(request.user)
+    if not can_post or not can_edit_property(request.user, property_item):
+        messages.error(request, "Unauthorized action: Only approved Real Estate Partners can edit property listings.")
+        return redirect('accounts:dashboard')
 
     if request.method == 'POST':
+        # Handle media deletion
+        delete_media_id = request.POST.get('delete_media_id')
+        if delete_media_id:
+            try:
+                media_to_delete = PropertyMedia.objects.get(id=delete_media_id, property=property_item)
+                is_thumbnail = (property_item.thumbnail_media_id == media_to_delete.id)
+                media_to_delete.delete()
+                if is_thumbnail:
+                    remaining_media = property_item.media.filter(media_type='IMAGE').first()
+                    property_item.thumbnail_media = remaining_media
+                    property_item.save(update_fields=['thumbnail_media'])
+                    messages.info(request, "Selected thumbnail was deleted. Thumbnail updated to next available photo.")
+                else:
+                    messages.success(request, "Image deleted successfully.")
+                return redirect('properties:edit', slug=property_item.slug)
+            except PropertyMedia.DoesNotExist:
+                pass
+
         property_item.title = request.POST.get('title', property_item.title)
         property_item.description = request.POST.get('description', property_item.description)
 
@@ -381,7 +430,6 @@ def edit_property_view(request, slug):
         if price_val:
             new_p = float(price_val)
             if property_item.price and new_p < float(property_item.price):
-                # Track genuine price drop
                 PropertyPriceHistory.objects.create(
                     property=property_item,
                     previous_price=property_item.price,
@@ -393,6 +441,15 @@ def edit_property_view(request, slug):
         if rent_val:
             property_item.rent = float(rent_val)
 
+        # Selected Main Thumbnail Update (MODULE 6)
+        selected_thumb_id = request.POST.get('selected_thumbnail_id')
+        if selected_thumb_id:
+            try:
+                thumb_media = PropertyMedia.objects.get(id=selected_thumb_id, property=property_item)
+                property_item.thumbnail_media = thumb_media
+            except PropertyMedia.DoesNotExist:
+                pass
+
         if property_item.listing_state == ListingStateChoices.ACTIVE:
             property_item.listing_state = ListingStateChoices.PENDING_APPROVAL
             messages.info(request, "Property updated and submitted for re-review moderation.")
@@ -401,19 +458,45 @@ def edit_property_view(request, slug):
 
         property_item.save()
 
+        # Handle newly uploaded images (Max 8 limit)
         images = request.FILES.getlist('images')
+        MAX_PROPERTY_IMAGES = 8
         current_media_count = property_item.media.count()
+
+        if current_media_count >= MAX_PROPERTY_IMAGES and images:
+            messages.warning(request, f"Property already has the maximum of {MAX_PROPERTY_IMAGES} photos uploaded. No additional images were added.")
+            images = []
+        elif current_media_count + len(images) > MAX_PROPERTY_IMAGES:
+            allowed_slots = MAX_PROPERTY_IMAGES - current_media_count
+            messages.warning(request, f"Maximum limit of {MAX_PROPERTY_IMAGES} photos reached. Only the first {allowed_slots} new photo(s) were added.")
+            images = images[:allowed_slots]
+
+        newly_created = []
+
         for idx, img in enumerate(images):
+            if img.size > MAX_UPLOAD_SIZE_BYTES:
+                size_mb = img.size / (1024 * 1024)
+                messages.error(request, f"Maximum allowed file size is 5 MB per file. Image '{img.name}' ({size_mb:.2f} MB) was rejected.")
+                continue
+
             try:
                 validate_property_image(img)
-                PropertyMedia.objects.create(
+                m_obj = PropertyMedia.objects.create(
                     property=property_item,
                     file=img,
                     media_type='IMAGE',
                     display_order=current_media_count + idx
                 )
-            except Exception:
-                continue
+                newly_created.append(m_obj)
+            except Exception as e:
+                messages.warning(request, f"Image '{img.name}' validation error: {e}")
+
+        # If property had no thumbnail set, set to first available
+        if not property_item.thumbnail_media:
+            first_m = property_item.media.filter(media_type='IMAGE').first()
+            if first_m:
+                property_item.thumbnail_media = first_m
+                property_item.save(update_fields=['thumbnail_media'])
 
         return redirect('properties:detail', slug=property_item.slug)
 

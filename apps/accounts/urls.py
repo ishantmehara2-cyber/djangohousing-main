@@ -12,7 +12,12 @@ from apps.accounts.views import (
     tenant_dashboard_view,
     owner_dashboard_view,
     agent_dashboard_view,
+    partner_dashboard_view,
+    partner_upload_document_view,
     admin_dashboard_view,
+    admin_partner_applications_view,
+    admin_partner_detail_view,
+    admin_download_partner_document_view,
     profile_view,
     edit_profile_view,
     update_lead_status_view,
@@ -48,11 +53,18 @@ urlpatterns = [
 
     # Dashboards
     path('dashboard/', dashboard_view, name='dashboard'),
+    path('dashboard/partner/', partner_dashboard_view, name='partner_dashboard'),
+    path('dashboard/partner/upload-document/', partner_upload_document_view, name='partner_upload_document'),
     path('dashboard/buyer/', buyer_dashboard_view, name='buyer_dashboard'),
     path('dashboard/tenant/', tenant_dashboard_view, name='tenant_dashboard'),
     path('dashboard/owner/', owner_dashboard_view, name='owner_dashboard'),
     path('dashboard/agent/', agent_dashboard_view, name='agent_dashboard'),
     path('dashboard/admin/', admin_dashboard_view, name='admin_dashboard'),
+
+    # Admin Verification Portal Routes
+    path('admin-panel/partners/', admin_partner_applications_view, name='admin_partner_applications'),
+    path('admin-panel/partners/<int:user_id>/', admin_partner_detail_view, name='admin_partner_detail'),
+    path('admin-panel/partners/documents/<int:doc_id>/download/', admin_download_partner_document_view, name='admin_download_partner_document'),
 
     # Lead management
     path('leads/<int:lead_id>/update-status/', update_lead_status_view, name='update_lead_status'),

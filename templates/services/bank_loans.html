@@ -97,7 +97,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {% if banks %}
                 {% for b in banks %}
-                <div class="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition flex flex-col justify-between">
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition flex flex-col justify-between">
                     <div>
                         <div class="h-12 flex items-center mb-4">
                             {% if b.logo %}
@@ -106,33 +106,7 @@
                             <span class="font-black text-lg text-gray-900">{{ b.name }}</span>
                             {% endif %}
                         </div>
-                        <div class="space-y-2 mb-4">
-                            <div class="flex justify-between text-xs">
-                                <span class="text-gray-500">Interest Rate:</span>
-                                <span class="font-bold text-brand-primary text-sm">{{ b.min_interest_rate }}%{% if b.max_interest_rate %} - {{ b.max_interest_rate }}%{% endif %}</span>
-                            </div>
-                            <div class="flex justify-between text-xs">
-                                <span class="text-gray-500">Max Tenure:</span>
-                                <span class="font-semibold text-gray-800">{{ b.max_tenure_years }} Years</span>
-                            </div>
-                            <div class="flex justify-between text-xs">
-                                <span class="text-gray-500">Processing Fee:</span>
-                                <span class="font-semibold text-gray-800">{{ b.processing_fee_info }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#enquiry-section" class="w-full block text-center bg-gray-900 hover:bg-black text-white text-xs font-bold py-2.5 rounded-xl transition">
-                        Enquire for {{ b.name }}
-                    </a>
-                </div>
-                {% endfor %}
-            {% else %}
-                {% for b in default_banks %}
-                <div class="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition flex flex-col justify-between">
-                    <div>
-                        <div class="h-10 flex items-center mb-4">
-                            <span class="font-black text-lg text-gray-900">{{ b.name }}</span>
-                        </div>
+
                         <div class="space-y-2.5 mb-4 border-t border-gray-100 pt-3">
                             <div class="flex justify-between text-xs">
                                 <span class="text-gray-500 font-medium">Interest Rate:</span>
@@ -144,22 +118,45 @@
                             </div>
                             <div class="flex justify-between text-xs">
                                 <span class="text-gray-500 font-medium">Processing Fee:</span>
-                                <span class="font-semibold text-gray-800 truncate max-w-[120px]" title="{{ b.processing_fee_info }}">{{ b.processing_fee_info }}</span>
+                                <span class="font-semibold text-gray-800 truncate max-w-[130px]" title="{{ b.processing_fee_info }}">{{ b.processing_fee_info }}</span>
                             </div>
                         </div>
+
+                        {% if b.get_benefits_list %}
                         <ul class="text-[11px] text-gray-600 space-y-1 mb-4">
-                            {% for feat in b.features %}
+                            {% for feat in b.get_benefits_list %}
                             <li class="flex items-center gap-1.5">
                                 <span class="text-green-600 font-bold">✓</span> {{ feat }}
                             </li>
                             {% endfor %}
                         </ul>
+                        {% endif %}
                     </div>
-                    <a href="#enquiry-section" class="w-full block text-center bg-gray-900 hover:bg-black text-white text-xs font-bold py-2.5 rounded-xl transition">
+
+                    {% if b.application_url %}
+                    <a href="{{ b.application_url }}" target="_blank" rel="noopener noreferrer" class="w-full block text-center bg-gray-900 hover:bg-black text-white text-xs font-bold py-2.5 rounded-xl transition shadow">
+                        Apply via {{ b.name }} ↗
+                    </a>
+                    {% else %}
+                    <a href="#enquiry-section" class="w-full block text-center bg-gray-900 hover:bg-black text-white text-xs font-bold py-2.5 rounded-xl transition shadow">
                         Apply via {{ b.name }}
                     </a>
+                    {% endif %}
                 </div>
                 {% endfor %}
+            {% else %}
+                <div class="col-span-full py-12 text-center text-gray-500 font-medium">
+                    No active banking partners found. Please check back shortly.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Required Disclaimer & Last-Updated Date Note (MODULE 9) -->
+        <div class="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-2xl text-xs text-gray-600 space-y-1">
+            <p class="font-extrabold text-gray-900">Disclaimer:</p>
+            <p class="italic">Interest rates, processing fees and loan terms are indicative and subject to the bank's eligibility criteria, verification and prevailing policies. Please confirm the latest terms directly with the bank.</p>
+            {% if latest_updated_at %}
+            <p class="text-[11px] text-gray-400 font-medium pt-1">Information last updated: {{ latest_updated_at|date:"d F Y" }}</p>
             {% endif %}
         </div>
     </div>
@@ -246,39 +243,46 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-300 mb-1">Full Name *</label>
-                        {{ form.name }}
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}<p class="text-red-400 text-[10px] mt-0.5 font-semibold">{{ form.full_name.errors.0 }}</p>{% endif %}
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-300 mb-1">Mobile Number *</label>
-                        {{ form.phone }}
+                        {{ form.mobile_number }}
+                        {% if form.mobile_number.errors %}<p class="text-red-400 text-[10px] mt-0.5 font-semibold">{{ form.mobile_number.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-300 mb-1">Email Address *</label>
-                        {{ form.email }}
+                        {{ form.email_address }}
+                        {% if form.email_address.errors %}<p class="text-red-400 text-[10px] mt-0.5 font-semibold">{{ form.email_address.errors.0 }}</p>{% endif %}
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-300 mb-1">Employment Type</label>
                         {{ form.employment_type }}
+                        {% if form.employment_type.errors %}<p class="text-red-400 text-[10px] mt-0.5 font-semibold">{{ form.employment_type.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-300 mb-1">Net Monthly Income (₹) *</label>
-                        {{ form.monthly_income }}
+                        {{ form.net_monthly_income }}
+                        {% if form.net_monthly_income.errors %}<p class="text-red-400 text-[10px] mt-0.5 font-semibold">{{ form.net_monthly_income.errors.0 }}</p>{% endif %}
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-300 mb-1">Desired Loan Amount (₹) *</label>
                         {{ form.desired_loan_amount }}
+                        {% if form.desired_loan_amount.errors %}<p class="text-red-400 text-[10px] mt-0.5 font-semibold">{{ form.desired_loan_amount.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-gray-300 mb-1">Preferred Bank (Optional)</label>
                     {{ form.preferred_bank }}
+                    {% if form.preferred_bank.errors %}<p class="text-red-400 text-[10px] mt-0.5 font-semibold">{{ form.preferred_bank.errors.0 }}</p>{% endif %}
                 </div>
 
                 <button type="submit" class="w-full bg-brand-primary hover:bg-brand-hover text-white font-bold py-3.5 rounded-xl transition shadow-lg text-sm">

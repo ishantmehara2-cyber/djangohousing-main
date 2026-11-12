@@ -1,5 +1,31 @@
 from django.contrib import admin
-from apps.services.models import BankPartner, BankLoanProduct, BankLoanEnquiry, RentalAgreementRequest, EmailOTP
+from apps.services.models import (
+    BankPartner,
+    BankLoanProduct,
+    BankLoanEnquiry,
+    RentalAgreementRequest,
+    EmailOTP,
+    LoanInquiryLead,
+    LoanInquiryNote,
+    LoanInquiryStatusHistory
+)
+
+@admin.register(LoanInquiryLead)
+class LoanInquiryLeadAdmin(admin.ModelAdmin):
+    list_display = ('lead_id', 'full_name', 'mobile_number', 'email_address', 'employment_type', 'net_monthly_income', 'desired_loan_amount', 'preferred_bank', 'status', 'created_at')
+    list_filter = ('status', 'employment_type', 'preferred_bank', 'is_deleted')
+    search_fields = ('lead_id', 'full_name', 'email_address', 'mobile_number')
+    ordering = ('-created_at',)
+
+@admin.register(LoanInquiryNote)
+class LoanInquiryNoteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'lead', 'author', 'created_at')
+    search_fields = ('lead__lead_id', 'lead__full_name', 'note_text')
+
+@admin.register(LoanInquiryStatusHistory)
+class LoanInquiryStatusHistoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'lead', 'old_status', 'new_status', 'updated_by', 'created_at')
+    search_fields = ('lead__lead_id', 'lead__full_name')
 
 @admin.register(BankPartner)
 class BankPartnerAdmin(admin.ModelAdmin):

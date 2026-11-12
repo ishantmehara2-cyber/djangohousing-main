@@ -66,14 +66,24 @@ class AuthenticationAndOTPWorkflowsTestCase(TestCase):
 
     def test_registration_otp_workflow(self):
         # 1. Registration POST
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        doc_file = SimpleUploadedFile("gumasta.pdf", b"%PDF-1.4 test doc", content_type="application/pdf")
         reg_response = self.client.post(reverse('accounts:register'), {
             'first_name': 'Alice',
-            'last_name': 'Tenant',
+            'last_name': 'Partner',
             'email': 'alice@example.com',
             'phone': '9123456789',
-            'role': RoleChoices.TENANT,
+            'role': RoleChoices.PARTNER,
             'password': 'StrongPassword123!',
-            'confirm_password': 'StrongPassword123!'
+            'confirm_password': 'StrongPassword123!',
+            'agency_name': 'Alice Realty',
+            'business_address': '101 Trade Center',
+            'business_state': 'Maharashtra',
+            'business_city': 'Mumbai',
+            'business_pincode': '400050',
+            'declaration_accepted': 'on',
+            'doc_category_1': 'GUMASTA',
+            'doc_file_1': doc_file
         })
         self.assertRedirects(reg_response, reverse('accounts:verify_otp'))
 

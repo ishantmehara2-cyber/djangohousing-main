@@ -6,18 +6,57 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from apps.core.validators import validate_image_file
+
+class BankCategoryChoices(models.TextChoices):
+    PUBLIC_SECTOR = 'PUBLIC_SECTOR', 'Public Sector Bank'
+    PRIVATE_SECTOR = 'PRIVATE_SECTOR', 'Private Sector Bank'
+    FOREIGN_BANK = 'FOREIGN_BANK', 'Foreign Bank'
+    NBFC = 'NBFC', 'Housing Finance Company / NBFC'
+    OTHER = 'OTHER', 'Other Financial Institution'
+
+class ProcessingFeeTypeChoices(models.TextChoices):
+    PERCENTAGE = 'PERCENTAGE', 'Percentage of Loan Amount'
+    FIXED = 'FIXED', 'Fixed Flat Amount'
+    RANGE = 'RANGE', 'Fee Range'
+    CUSTOM = 'CUSTOM', 'Custom Description'
 
 class BankPartner(models.Model):
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, unique=True)
-    logo = models.ImageField(upload_to='bank_logos/', null=True, blank=True)
+    logo = models.ImageField(upload_to='bank_logos/', null=True, blank=True, validators=[validate_image_file])
+    short_description = models.CharField(max_length=255, null=True, blank=True)
+    full_description = models.TextField(null=True, blank=True)
+    website_url = models.URLField(null=True, blank=True)
+    application_url = models.URLField(null=True, blank=True)
+    category = models.CharField(max_length=30, choices=BankCategoryChoices.choices, default=BankCategoryChoices.PRIVATE_SECTOR)
+    display_order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    # Loan Rates & Limits
     min_interest_rate = models.DecimalField(max_digits=5, decimal_places=2, help_text="Starting interest rate e.g. 8.40")
     max_interest_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     max_tenure_years = models.IntegerField(default=30)
+    min_loan_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    max_loan_amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+
+    # Processing Fee
     processing_fee_info = models.CharField(max_length=255, default="Up to 0.50% + GST")
-    is_active = models.BooleanField(default=True)
-    display_order = models.IntegerField(default=0)
+    processing_fee_type = models.CharField(max_length=30, choices=ProcessingFeeTypeChoices.choices, default=ProcessingFeeTypeChoices.CUSTOM)
+    processing_fee_description = models.TextField(null=True, blank=True)
+    additional_charges = models.TextField(null=True, blank=True)
+
+    # Dynamic Features & Benefits
+    benefits = models.JSONField(default=list, blank=True, help_text="Dynamic list of benefits/features")
+
+    # Additional Documentation & Policy Info
+    eligibility_info = models.TextField(null=True, blank=True)
+    required_documents = models.TextField(null=True, blank=True)
+    special_offers = models.TextField(null=True, blank=True)
+    disclaimer = models.TextField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'bank_partners'
@@ -25,6 +64,20 @@ class BankPartner(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def get_benefits_list(self):
+        if isinstance(self.benefits, list) and self.benefits:
+            return [str(b).strip() for b in self.benefits if str(b).strip()]
+        if isinstance(self.benefits, str) and self.benefits.strip():
+            try:
+                import json
+                parsed = json.loads(self.benefits)
+                if isinstance(parsed, list):
+                    return [str(b).strip() for b in parsed if str(b).strip()]
+            except Exception:
+                return [b.strip() for b in self.benefits.split('\n') if b.strip()]
+        return []
 
 class BankLoanProduct(models.Model):
     bank = models.ForeignKey(BankPartner, on_delete=models.CASCADE, related_name='products')
@@ -68,6 +121,92 @@ class BankLoanEnquiry(models.Model):
 
     def __str__(self):
         return f"Loan Enquiry #{self.id} - {self.name}"
+
+class LoanInquiryStatusChoices(models.TextChoices):
+    NEW = 'NEW', 'New'
+    CONTACT_PENDING = 'CONTACT_PENDING', 'Contact Pending'
+    CONTACTED = 'CONTACTED', 'Contacted'
+    DOCUMENTS_REQUESTED = 'DOCUMENTS_REQUESTED', 'Documents Requested'
+    UNDER_BANK_EVALUATION = 'UNDER_BANK_EVALUATION', 'Under Bank Evaluation'
+    ELIGIBLE = 'ELIGIBLE', 'Eligible'
+    NOT_ELIGIBLE = 'NOT_ELIGIBLE', 'Not Eligible'
+    LOAN_APPLIED = 'LOAN_APPLIED', 'Loan Applied'
+    LOAN_APPROVED = 'LOAN_APPROVED', 'Loan Approved'
+    LOAN_REJECTED = 'LOAN_REJECTED', 'Loan Rejected'
+    CLOSED = 'CLOSED', 'Closed'
+
+class EmploymentTypeChoices(models.TextChoices):
+    SALARIED = 'SALARIED', 'Salaried'
+    SELF_EMPLOYED = 'SELF_EMPLOYED', 'Self-Employed Professional'
+    BUSINESS = 'BUSINESS', 'Business Owner'
+
+class LoanInquiryLead(models.Model):
+    lead_id = models.CharField(max_length=32, unique=True, editable=False, db_index=True)
+    full_name = models.CharField(max_length=150)
+    mobile_number = models.CharField(max_length=20)
+    email_address = models.EmailField()
+    employment_type = models.CharField(max_length=50, choices=EmploymentTypeChoices.choices, default=EmploymentTypeChoices.SALARIED)
+    net_monthly_income = models.DecimalField(max_digits=14, decimal_places=2)
+    desired_loan_amount = models.DecimalField(max_digits=14, decimal_places=2)
+    preferred_bank = models.ForeignKey(BankPartner, on_delete=models.SET_NULL, null=True, blank=True, related_name='loan_leads')
+
+    status = models.CharField(
+        max_length=30,
+        choices=LoanInquiryStatusChoices.choices,
+        default=LoanInquiryStatusChoices.NEW,
+        db_index=True
+    )
+    assigned_staff = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_loan_leads'
+    )
+    admin_notes = models.TextField(null=True, blank=True)
+    follow_up_date = models.DateField(null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'loan_inquiry_leads'
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.lead_id:
+            import uuid
+            prefix = "LL"
+            timestamp = timezone.now().strftime("%Y%m%d")
+            rand_suffix = str(uuid.uuid4().hex[:6]).upper()
+            self.lead_id = f"{prefix}-{timestamp}-{rand_suffix}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.lead_id} - {self.full_name} ({self.get_status_display()})"
+
+class LoanInquiryNote(models.Model):
+    lead = models.ForeignKey(LoanInquiryLead, on_delete=models.CASCADE, related_name='notes')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    note_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'loan_inquiry_notes'
+        ordering = ['-created_at']
+
+class LoanInquiryStatusHistory(models.Model):
+    lead = models.ForeignKey(LoanInquiryLead, on_delete=models.CASCADE, related_name='status_history')
+    old_status = models.CharField(max_length=30, choices=LoanInquiryStatusChoices.choices)
+    new_status = models.CharField(max_length=30, choices=LoanInquiryStatusChoices.choices)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'loan_inquiry_status_history'
+        ordering = ['-created_at']
 
 class RentalAgreementStatus(models.TextChoices):
     PENDING = 'PENDING', 'Pending Review'
@@ -141,7 +280,6 @@ class EmailOTP(models.Model):
         email_clean = email.lower().strip()
         now = timezone.now()
 
-        # Resend cooldown check (60 seconds)
         if not bypass_cooldown:
             last_otp = cls.objects.filter(
                 email__iexact=email_clean,
@@ -153,13 +291,11 @@ class EmailOTP(models.Model):
                 remaining = int(60 - (now - last_otp.last_resend_at).total_seconds())
                 raise ValueError(f"Please wait {remaining} seconds before requesting a new OTP code.")
 
-        # Invalidate unverified OTPs for same email & purpose (& property if applicable)
         qs = cls.objects.filter(email__iexact=email_clean, purpose=purpose, is_verified=False)
         if property_obj:
             qs = qs.filter(property=property_obj)
         qs.delete()
 
-        # Cryptographically secure 6-digit OTP
         otp_digits = "".join([secrets.choice("0123456789") for _ in range(6)])
 
         salt = settings.SECRET_KEY[:16]

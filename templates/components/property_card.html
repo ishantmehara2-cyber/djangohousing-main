@@ -1,30 +1,21 @@
 {% load property_tags %}
 <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
     <div>
-        <!-- Image & Badges -->
+        <!-- Image & Badges (Main Selected Thumbnail ONLY) -->
         <div class="h-52 bg-gray-100 relative overflow-hidden">
-            {% with first_media=prop.media.first media_count=prop.media.count %}
-                {% if first_media %}
-                    <img src="{{ first_media.file.url }}" alt="{{ prop.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                {% else %}
-                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50 space-y-1">
-                        <span class="text-2xl">🏠</span>
-                        <span class="text-[11px] font-bold">Housing.. Verified</span>
-                    </div>
-                {% endif %}
+            {% if prop.get_main_thumbnail_url %}
+                <img src="{{ prop.get_main_thumbnail_url }}" alt="{{ prop.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+            {% else %}
+                <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50 space-y-1">
+                    <span class="text-2xl">🏠</span>
+                    <span class="text-[11px] font-bold">Housing.. Verified</span>
+                </div>
+            {% endif %}
 
-                <!-- Purpose Badge -->
-                <span class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider">
-                    {{ prop.get_listing_purpose_display }}
-                </span>
-
-                <!-- Media count badge if multiple -->
-                {% if media_count > 1 %}
-                    <span class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">
-                        📷 {{ media_count }} Photos
-                    </span>
-                {% endif %}
-            {% endwith %}
+            <!-- Purpose Badge -->
+            <span class="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider">
+                {{ prop.get_listing_purpose_display }}
+            </span>
 
             <!-- Favorite Button -->
             <form action="{% url 'engagements:toggle-favorite' prop.slug %}" method="POST" class="absolute top-3 right-3">

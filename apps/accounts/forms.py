@@ -3,16 +3,14 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.forms import PasswordResetForm
-from apps.accounts.models import RoleChoices
+from apps.accounts.models import RoleChoices, PartnerDocumentTypeChoices
+from apps.core.validators import validate_document_file, validate_file_size_5mb
 
 User = get_user_model()
 
 # Roles allowed for public user registration
 ALLOWED_REGISTRATION_ROLES = [
-    (RoleChoices.BUYER, 'Buyer'),
-    (RoleChoices.TENANT, 'Tenant'),
-    (RoleChoices.OWNER, 'Property Owner'),
-    (RoleChoices.AGENT, 'Real Estate Agent / Broker'),
+    (RoleChoices.PARTNER, 'Real Estate Partner'),
 ]
 
 class UserRegistrationForm(forms.Form):
@@ -21,7 +19,7 @@ class UserRegistrationForm(forms.Form):
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
-            'placeholder': 'Enter your first name'
+            'placeholder': 'Enter full first name'
         })
     )
     last_name = forms.CharField(
@@ -29,7 +27,7 @@ class UserRegistrationForm(forms.Form):
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
-            'placeholder': 'Enter your last name'
+            'placeholder': 'Enter last name'
         })
     )
     email = forms.EmailField(
@@ -49,9 +47,11 @@ class UserRegistrationForm(forms.Form):
     )
     role = forms.ChoiceField(
         choices=ALLOWED_REGISTRATION_ROLES,
+        initial=RoleChoices.PARTNER,
         required=True,
         widget=forms.Select(attrs={
-            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary'
+            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
+            'id': 'id_role'
         })
     )
     password = forms.CharField(
@@ -66,6 +66,65 @@ class UserRegistrationForm(forms.Form):
         widget=forms.PasswordInput(attrs={
             'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
             'placeholder': 'Re-enter password'
+        })
+    )
+
+    # Real Estate Partner Fields
+    agency_name = forms.CharField(
+        max_length=255,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
+            'placeholder': 'Business or Agency Name (where applicable)'
+        })
+    )
+    business_address = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
+            'rows': 2,
+            'placeholder': 'Complete Business Address'
+        })
+    )
+    business_state = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
+            'placeholder': 'State'
+        })
+    )
+    business_city = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
+            'placeholder': 'City'
+        })
+    )
+    business_locality = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
+            'placeholder': 'Locality / Area'
+        })
+    )
+    business_pincode = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'bg-gray-50 border border-gray-200 p-3 rounded-xl w-full text-xs font-bold text-gray-800 outline-none focus:border-brand-primary',
+            'placeholder': 'PIN Code'
+        })
+    )
+
+    # Property Listing Responsibility Declaration Checkbox
+    declaration_accepted = forms.BooleanField(
+        required=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary',
+            'id': 'id_declaration_accepted'
         })
     )
 
@@ -85,10 +144,9 @@ class UserRegistrationForm(forms.Form):
         return phone
 
     def clean_role(self):
-        role = self.cleaned_data.get('role')
-        valid_roles = [r[0] for r in ALLOWED_REGISTRATION_ROLES]
-        if role not in valid_roles:
-            raise ValidationError("Invalid account type selected. Administrator accounts cannot be created publicly.")
+        role = self.cleaned_data.get('role', RoleChoices.PARTNER)
+        if role not in [RoleChoices.PARTNER, RoleChoices.AGENT, RoleChoices.OWNER, RoleChoices.DEVELOPER]:
+            role = RoleChoices.PARTNER
         return role
 
     def clean(self):
@@ -110,10 +168,17 @@ class UserRegistrationForm(forms.Form):
                     validate_password(password, user=temp_user)
                 except ValidationError as err:
                     self.add_error('password', err)
+
+        declaration_accepted = cleaned_data.get('declaration_accepted')
+        if not declaration_accepted:
+            self.add_error('declaration_accepted', "You must accept the Property Listing Responsibility Declaration to register as a Real Estate Partner.")
+
         return cleaned_data
 
     def save(self):
         cd = self.cleaned_data
+        role = cd.get('role') or RoleChoices.PARTNER
+
         user = User.objects.create_user(
             username=cd['email'],
             email=cd['email'],
@@ -121,7 +186,15 @@ class UserRegistrationForm(forms.Form):
             last_name=cd['last_name'],
             phone=cd['phone'],
             password=cd['password'],
-            role=cd['role']
+            role=role,
+            agency_name=cd.get('agency_name', ''),
+            business_address=cd.get('business_address', ''),
+            business_state=cd.get('business_state', ''),
+            business_city=cd.get('business_city', ''),
+            business_locality=cd.get('business_locality', ''),
+            business_pincode=cd.get('business_pincode', ''),
+            partner_approval_status='PENDING',
+            declaration_accepted=cd.get('declaration_accepted', False)
         )
         return user
 
